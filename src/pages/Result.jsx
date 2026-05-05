@@ -7,6 +7,7 @@ import { useSpotifyPlayer } from '../hooks/useSpotifyPlayer'
 import { useEmotionStability } from '../hooks/useEmotionStability'
 import { useFavorites } from '../hooks/useFavorites'
 import { useHistory } from '../hooks/useHistory'
+import PlayerBar from '../components/Player/PlayerBar'
 import './Result.css'
 
 function SpotifyIcon({ size = 24 }) {
@@ -25,7 +26,7 @@ function Result() {
   // 💡 CONCEPT : On utilise nos deux custom hooks
   //   useSpotifyPlayer gère le SDK et expose playPlaylist()
   //   useEmotionStability filtre les émotions instables et expose reportEmotion()
-  const { isReady, error: playerError, needsReauth, playPlaylist } = useSpotifyPlayer()
+  const { isReady, error: playerError, needsReauth, playerState, playPlaylist, togglePlay, nextTrack, prevTrack, seekTo } = useSpotifyPlayer()
   const { stableEmotion, confidence, secondsLeft, reportEmotion, resetEmotion } = useEmotionStability()
   const { addFavorite, removeFavorite, isFavorite } = useFavorites()
   const { addSession } = useHistory()
@@ -145,6 +146,16 @@ function Result() {
           />
         </div>
       )}
+
+      {/* Player fixe en bas de page */}
+      <PlayerBar
+        playerState={playerState}
+        onToggle={togglePlay}
+        onNext={nextTrack}
+        onPrev={prevTrack}
+        onSeek={seekTo}
+        currentEmotion={stableEmotion}
+      />
     </main>
   )
 }

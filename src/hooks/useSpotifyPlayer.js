@@ -1,76 +1,75 @@
 import { useState, useEffect, useRef } from 'react'
 import { getToken } from '../services/spotify'
 
-// 🎯 BUT : Initialise le Spotify Web Playback SDK dans le navigateur
-// Ce hook transforme l'onglet en "appareil Spotify" capable de lire de la musique
-//
-// 💡 CONCEPT : Pourquoi un custom hook ?
-//   Le SDK a un cycle de vie complexe (chargement script → init player → connexion → events)
-//   Mettre tout ça dans un composant mélange logique et rendu.
-//   Un hook isole cette logique et la rend réutilisable.
-//
-// @returns {{
-//   isReady: boolean,       — le player est connecté et prêt
-//   error: string | null,   — message d'erreur si problème
-//   playPlaylist: function, — lance une playlist par son ID
-//   player: Spotify.Player  — instance du player (pour pause/resume si besoin)
-// }}
 export function useSpotifyPlayer() {
   const [isReady, setIsReady] = useState(false)
   const [error, setError] = useState(null)
   const [needsReauth, setNeedsReauth] = useState(false)
 
-  // 💡 useRef pour deviceId et player : ces valeurs n'ont pas besoin de déclencher
-  //    un re-render quand elles changent — on les utilise juste en interne
+  // 🎯 BUT : État du player en temps réel (piste, pause, position, durée)
+  // 💡 Alimenté par l'événement player_state_changed du SDK
+  const [playerState, setPlayerState] = useState(null)
+
   const deviceIdRef = useRef(null)
   const playerRef = useRef(null)
+  const positionTimerRef = useRef(null) // Timer pour avancer la barre de progression
 
   useEffect(() => {
     const token = getToken()
     if (!token) return
 
-    // 🎯 BUT : On définit le callback AVANT de charger le script
-    // ⚠️ ATTENTION : Si on charge le script d'abord, le callback peut être appelé
-    //    avant qu'on l'ait défini → player jamais initialisé
     window.onSpotifyWebPlaybackSDKReady = () => {
       const player = new window.Spotify.Player({
         name: 'Moodify Player',
-        // 💡 getOAuthToken est appelé par le SDK quand il a besoin d'un token frais
-        //    On retourne le token stocké en localStorage
-        getOAuthToken: (cb) => {
-          const t = getToken()
-          if (t) cb(t)
-        },
+        getOAuthToken: (cb) => { const t = getToken(); if (t) cb(t) },
         volume: 0.7,
       })
 
       playerRef.current = player
 
-      // Événements du cycle de vie du player
       player.addListener('ready', ({ device_id }) => {
         deviceIdRef.current = device_id
         setIsReady(true)
       })
 
-      player.addListener('not_ready', () => {
-        setIsReady(false)
-      })
+      player.addListener('not_ready', () => setIsReady(false))
 
-      // ⚠️ Ces erreurs arrivent souvent si le token manque de scopes ou si pas Premium
       player.addListener('initialization_error', ({ message }) => setError(`Init: ${message}`))
       player.addListener('authentication_error', ({ message }) => {
-        // "Permissions missing" = le token n'a pas les bons scopes → reconnexion nécessaire
         setNeedsReauth(true)
         setError(message)
       })
       player.addListener('account_error', () => setError('Spotify Premium requis pour la lecture'))
 
+      // 🎯 BUT : Écoute les changements d'état du player
+      // 💡 CONCEPT : Cet événement est émis à chaque changement :
+      //   - nouvelle piste, pause, reprise, seek...
+      //   On en profite pour mettre à jour notre état React
+      player.addListener('player_state_changed', (state) => {
+        if (!state) { setPlayerState(null); return }
+
+        setPlayerState({
+          track: state.track_window.current_track,
+          paused: state.paused,
+          position: state.position,
+          duration: state.duration,
+        })
+
+        // 💡 Timer local pour faire avancer la barre de progression chaque seconde
+        //    sans attendre un nouvel événement SDK
+        clearInterval(positionTimerRef.current)
+        if (!state.paused) {
+          let pos = state.position
+          positionTimerRef.current = setInterval(() => {
+            pos += 1000
+            setPlayerState(prev => prev ? { ...prev, position: pos } : prev)
+          }, 1000)
+        }
+      })
+
       player.connect()
     }
 
-    // 💡 CONCEPT : Chargement dynamique d'un script externe
-    //   On crée une balise <script> et on l'ajoute au DOM
-    //   C'est différent d'un import ES6 : le SDK s'attache sur window.Spotify
     if (!document.getElementById('spotify-sdk')) {
       const script = document.createElement('script')
       script.id = 'spotify-sdk'
@@ -78,22 +77,15 @@ export function useSpotifyPlayer() {
       script.async = true
       document.body.appendChild(script)
     } else if (window.Spotify) {
-      // Script déjà chargé (hot reload) → on appelle le callback manuellement
       window.onSpotifyWebPlaybackSDKReady()
     }
 
-    // Nettoyage : on déconnecte le player quand le composant est démonté
     return () => {
       playerRef.current?.disconnect()
+      clearInterval(positionTimerRef.current)
     }
   }, [])
 
-  // 🎯 BUT : Lance une playlist Spotify sur l'appareil Moodify
-  // @param playlistId {string} - ex: "37i9dQZF1EVJHK7Q1TBABQ"
-  //
-  // 💡 CONCEPT : L'API REST Spotify permet de contrôler la lecture à distance
-  //   On envoie un PUT sur /me/player/play en précisant le device_id
-  //   pour que Spotify sache sur quel appareil jouer
   async function playPlaylist(playlistId) {
     const token = getToken()
     if (!token || !deviceIdRef.current) return
@@ -102,13 +94,8 @@ export function useSpotifyPlayer() {
       `https://api.spotify.com/v1/me/player/play?device_id=${deviceIdRef.current}`,
       {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          context_uri: `spotify:playlist:${playlistId}`,
-        }),
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context_uri: `spotify:playlist:${playlistId}` }),
       }
     )
 
@@ -118,5 +105,15 @@ export function useSpotifyPlayer() {
     }
   }
 
-  return { isReady, error, needsReauth, playPlaylist, player: playerRef.current }
+  // 🎯 BUT : Contrôles du player — délégués directement au SDK
+  function togglePlay() { playerRef.current?.togglePlay() }
+  function nextTrack()  { playerRef.current?.nextTrack() }
+  function prevTrack()  { playerRef.current?.previousTrack() }
+
+  // 🎯 BUT : Seek à une position précise (en ms)
+  function seekTo(ms) {
+    playerRef.current?.seek(ms)
+  }
+
+  return { isReady, error, needsReauth, playerState, playPlaylist, togglePlay, nextTrack, prevTrack, seekTo }
 }
