@@ -68,5 +68,13 @@ export function useEmotionStability() {
     }
   }
 
-  return { stableEmotion, confidence, secondsLeft, reportEmotion }
+  // 🎯 BUT : Réinitialise l'émotion stable pour relancer une nouvelle détection
+  function resetEmotion() {
+    setStableEmotion(null)
+    setConfidence(0)
+    setSecondsLeft(0)
+    candidateRef.current = null
+  }
+
+  return { stableEmotion, confidence, secondsLeft, reportEmotion, resetEmotion }
 }

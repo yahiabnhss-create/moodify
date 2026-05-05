@@ -18,6 +18,7 @@ import { getToken } from '../services/spotify'
 export function useSpotifyPlayer() {
   const [isReady, setIsReady] = useState(false)
   const [error, setError] = useState(null)
+  const [needsReauth, setNeedsReauth] = useState(false)
 
   // 💡 useRef pour deviceId et player : ces valeurs n'ont pas besoin de déclencher
   //    un re-render quand elles changent — on les utilise juste en interne
@@ -57,7 +58,11 @@ export function useSpotifyPlayer() {
 
       // ⚠️ Ces erreurs arrivent souvent si le token manque de scopes ou si pas Premium
       player.addListener('initialization_error', ({ message }) => setError(`Init: ${message}`))
-      player.addListener('authentication_error', ({ message }) => setError(`Auth: ${message}`))
+      player.addListener('authentication_error', ({ message }) => {
+        // "Permissions missing" = le token n'a pas les bons scopes → reconnexion nécessaire
+        setNeedsReauth(true)
+        setError(message)
+      })
       player.addListener('account_error', () => setError('Spotify Premium requis pour la lecture'))
 
       player.connect()
@@ -113,5 +118,5 @@ export function useSpotifyPlayer() {
     }
   }
 
-  return { isReady, error, playPlaylist, player: playerRef.current }
+  return { isReady, error, needsReauth, playPlaylist, player: playerRef.current }
 }

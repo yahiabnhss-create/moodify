@@ -9,7 +9,8 @@ const DETECTION_INTERVAL = 1500
 
 // 🎯 BUT : Affiche la caméra et détecte les émotions en continu
 // @param onDetect {function({ emotion, confidence })} - appelée à chaque détection valide
-function EmotionDetector({ onDetect }) {
+// @param paused   {boolean} - si true, met la détection en pause (sans arrêter la caméra)
+function EmotionDetector({ onDetect, paused = false }) {
   const videoRef = useRef(null)
   const intervalRef = useRef(null) // 💡 useRef pour stocker le timer sans déclencher de re-render
 
@@ -17,6 +18,15 @@ function EmotionDetector({ onDetect }) {
   const [running, setRunning] = useState(false)
   const [lastResult, setLastResult] = useState(null) // { emotion, confidence } de la dernière frame
   const [error, setError] = useState(null)
+
+  // 💡 Quand paused passe à true (émotion stable détectée), on arrête l'interval
+  useEffect(() => {
+    if (paused) {
+      clearInterval(intervalRef.current)
+      setRunning(false)
+      setLastResult(null)
+    }
+  }, [paused])
 
   // Démarre la caméra et charge les modèles IA au montage du composant
   useEffect(() => {

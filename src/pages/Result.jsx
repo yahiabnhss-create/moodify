@@ -25,8 +25,8 @@ function Result() {
   // 💡 CONCEPT : On utilise nos deux custom hooks
   //   useSpotifyPlayer gère le SDK et expose playPlaylist()
   //   useEmotionStability filtre les émotions instables et expose reportEmotion()
-  const { isReady, error: playerError, playPlaylist } = useSpotifyPlayer()
-  const { stableEmotion, confidence, secondsLeft, reportEmotion } = useEmotionStability()
+  const { isReady, error: playerError, needsReauth, playPlaylist } = useSpotifyPlayer()
+  const { stableEmotion, confidence, secondsLeft, reportEmotion, resetEmotion } = useEmotionStability()
   const { addFavorite, removeFavorite, isFavorite } = useFavorites()
   const { addSession } = useHistory()
 
@@ -89,10 +89,22 @@ function Result() {
         <button className="logout-btn" onClick={handleLogout}>Déconnecter</button>
       </div>
 
-      {playerError && <p className="result-error">{playerError}</p>}
+      {/* Erreur de permissions → token trop vieux, reconnexion nécessaire */}
+      {needsReauth && (
+        <div className="reauth-banner">
+          <p>Tes droits Spotify ont changé. Déconnecte-toi et reconnecte-toi.</p>
+          <button className="spotify-btn" onClick={() => { handleLogout(); loginWithSpotify() }}>
+            <SpotifyIcon size={18} /> Reconnecter Spotify
+          </button>
+        </div>
+      )}
+      {playerError && !needsReauth && <p className="result-error">{playerError}</p>}
 
-      {/* Détecteur d'émotion — passe reportEmotion comme callback */}
-      <EmotionDetector onDetect={({ emotion, confidence }) => reportEmotion(emotion, confidence)} />
+      {/* Détecteur d'émotion — mis en pause quand une émotion stable est détectée */}
+      <EmotionDetector
+        onDetect={({ emotion, confidence }) => reportEmotion(emotion, confidence)}
+        paused={!!stableEmotion}
+      />
 
       {/* Countdown de stabilité */}
       {secondsLeft > 0 && (
@@ -111,6 +123,9 @@ function Result() {
             <span className="emotion-confidence">{Math.round(confidence * 100)}% de confiance</span>
           </div>
           <p className="now-playing">🎵 Playlist en cours de lecture dans Spotify</p>
+          <button className="change-mood-btn" onClick={resetEmotion}>
+            Changer d'humeur
+          </button>
         </div>
       )}
 
