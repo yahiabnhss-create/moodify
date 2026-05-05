@@ -21,6 +21,7 @@ function Result() {
   const [connected, setConnected] = useState(!!getToken())
   const [detectedEmotion, setDetectedEmotion] = useState(null)
   const [detectedConfidence, setDetectedConfidence] = useState(0)
+  const [pendingPlaylistId, setPendingPlaylistId] = useState(null)
   const [tracks, setTracks] = useState([])
   const [loadingTracks, setLoadingTracks] = useState(false)
   const [apiError, setApiError] = useState(null)
@@ -31,8 +32,14 @@ function Result() {
 
   const currentEmotion = detectedEmotion ? EMOTIONS[detectedEmotion] : null
 
-  // 🎯 BUT : Appelé une seule fois quand EmotionDetector valide une émotion
-  // Lance la playlist correspondante et charge la liste des pistes
+  // Si le player n'était pas prêt au moment de la détection, joue dès qu'il est prêt
+  useEffect(() => {
+    if (isReady && pendingPlaylistId) {
+      playPlaylist(pendingPlaylistId)
+      setPendingPlaylistId(null)
+    }
+  }, [isReady, pendingPlaylistId])
+
   async function handleDetect({ emotion, confidence }) {
     setDetectedEmotion(emotion)
     setDetectedConfidence(confidence)
@@ -42,10 +49,12 @@ function Result() {
     const emotionData = EMOTIONS[emotion]
     if (!emotionData) return
 
-    // Lance la playlist sur Spotify
     if (isReady) {
       await playPlaylist(emotionData.playlistId)
       addSession(emotion, confidence, emotionData.playlistId, emotionData.label)
+    } else {
+      // Player pas encore prêt → on met en attente
+      setPendingPlaylistId(emotionData.playlistId)
     }
 
     // Charge la liste des pistes pour l'affichage

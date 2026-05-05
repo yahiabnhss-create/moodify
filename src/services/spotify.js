@@ -83,7 +83,7 @@ export async function getPlaylistTracks(emotion) {
   if (!token) throw new Error('Not authenticated')
 
   const res = await fetch(
-    `https://api.spotify.com/v1/playlists/${emotion.playlistId}/tracks?limit=20&market=from_token`,
+    `https://api.spotify.com/v1/playlists/${emotion.playlistId}/tracks?limit=20`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
 
@@ -91,7 +91,10 @@ export async function getPlaylistTracks(emotion) {
     logout()
     throw new Error('Session expirée, reconnecte-toi.')
   }
-  if (!res.ok) throw new Error('Erreur Spotify API')
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data?.error?.message ?? `Erreur Spotify (${res.status})`)
+  }
 
   const data = await res.json()
   return data.items
