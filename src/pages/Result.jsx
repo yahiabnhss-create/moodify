@@ -119,12 +119,10 @@ function Result() {
       )}
       {playerError && !needsReauth && <p className="result-error">{playerError}</p>}
 
-      {/* Détecteur — affiché seulement si aucune émotion détectée */}
-      {!detectedEmotion && (
-        <EmotionDetector onDetect={handleDetect} />
-      )}
+      {/* Webcam toujours visible */}
+      <EmotionDetector onDetect={handleDetect} />
 
-      {/* Résultat de la détection */}
+      {/* Résultat affiché sous la webcam */}
       {currentEmotion && (
         <div className="emotion-result">
           <div className="emotion-result-badge">
@@ -140,7 +138,6 @@ function Result() {
         </div>
       )}
 
-      {apiError && <p className="result-error">{apiError}</p>}
       {loadingTracks && <p className="result-loading">Chargement des titres...</p>}
 
       {tracks.length > 0 && (
