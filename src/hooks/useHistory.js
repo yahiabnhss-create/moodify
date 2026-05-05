@@ -1,47 +1,33 @@
+import { useCallback } from 'react'
 import { useLocalStorage } from './useLocalStorage'
 
-//   BUT : Enregistre et lit l'historique des sessions de détection d'émotion
-//
-//   CONCEPT : Les stats sont CALCULÉES depuis l'historique plutôt que stockées séparément
-//   Avantage : pas de risque de désynchronisation entre deux sources de vérité
-//   L'historique est la source unique → les stats en découlent toujours correctement
-//
-// Structure d'une session :
-// { id, date, emotion, confidence, playlistId, playlistName }
+const MAX_HISTORY_ENTRIES = 100
+
+function createSessionId() {
+  return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
 export function useHistory() {
   const [history, setHistory] = useLocalStorage('moodify_history', [])
 
-  // BUT : Enregistre une nouvelle session
-  // @param emotion     {string} - émotion validée ex: "happy"
-  // @param confidence  {number} - score entre 0 et 1
-  // @param playlistId  {string} - id Spotify de la playlist jouée
-  // @param playlistName {string} - nom lisible de la playlist
-  function addSession(emotion, confidence, playlistId, playlistName) {
+  const addSession = useCallback((emotion, confidence, playlistId, playlistName) => {
     const session = {
-      id: Date.now(),
+      id: createSessionId(),
       date: new Date().toISOString(),
       emotion,
       confidence,
       playlistId,
       playlistName,
     }
-    // On ajoute en tête de liste (plus récent en premier)
-    setHistory(prev => [session, ...prev])
-  }
 
-  // BUT : Supprime toutes les sessions de l'historique
-  function clearHistory() {
+    setHistory(prev => [session, ...prev].slice(0, MAX_HISTORY_ENTRIES))
+  }, [setHistory])
+
+  const clearHistory = useCallback(() => {
     setHistory([])
-  }
+  }, [setHistory])
 
-  //  BUT : Calcule la répartition des émotions depuis l'historique
-  // @param entries {array} - sous-ensemble de l'historique (filtré)
-  // @returns {array} - [{ emotion, label, count, percent }]
-  //
-  //  CONCEPT : Array.reduce()
-  //   reduce() parcourt un tableau et accumule un résultat
-  //   Ici on construit un objet { happy: 5, sad: 2, ... } depuis la liste des sessions
-  function computeEmotionStats(entries) {
+  const computeEmotionStats = useCallback((entries) => {
     const counts = entries.reduce((acc, session) => {
       acc[session.emotion] = (acc[session.emotion] ?? 0) + 1
       return acc
@@ -53,20 +39,18 @@ export function useHistory() {
       count,
       percent: total > 0 ? Math.round((count / total) * 100) : 0,
     }))
-  }
+  }, [])
 
-  //  BUT : Filtre l'historique par période
-  // @param period {'day'|'week'|'month'|'all'}
-  function filterByPeriod(period) {
+  const filterByPeriod = useCallback((period) => {
     if (period === 'all') return history
 
     const now = new Date()
     const limits = { day: 1, week: 7, month: 30 }
-    const days = limits[period]
+    const days = limits[period] ?? limits.week
     const cutoff = new Date(now.setDate(now.getDate() - days))
 
-    return history.filter(s => new Date(s.date) >= cutoff)
-  }
+    return history.filter(session => new Date(session.date) >= cutoff)
+  }, [history])
 
   return { history, addSession, clearHistory, computeEmotionStats, filterByPeriod }
 }

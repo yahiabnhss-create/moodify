@@ -1,10 +1,6 @@
 import PlaylistCard from './PlaylistCard'
 import './Playlist.css'
 
-// 🎯 BUT : Affiche une liste de morceaux
-// @param tracks      {array}    - liste des pistes
-// @param onFavorite  {function} - callback favori transmis à chaque carte (optionnel)
-// @param isFavorite  {function} - (trackId) => boolean, pour l'état du cœur (optionnel)
 function Playlist({ tracks, onFavorite, isFavorite }) {
   return (
     <div className="playlist">

@@ -36,3 +36,9 @@ button:disabled {
   border-top: 1px solid var(--border);
   opacity: 0.6;
 }
+
+.route-loading {
+  min-height: 240px;
+  justify-content: center;
+  color: var(--text);
+}

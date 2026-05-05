@@ -1,5 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { getToken } from '../services/spotify'
+
+async function readSpotifyError(res, fallback) {
+  const data = await res.json().catch(() => ({}))
+  return data?.error?.message ?? fallback
+}
 
 export function useSpotifyPlayer() {
   const [isReady, setIsReady] = useState(false)
@@ -15,10 +20,22 @@ export function useSpotifyPlayer() {
     const token = getToken()
     if (!token) return
 
+    let active = true
+
+    function clearPositionTimer() {
+      clearInterval(positionTimerRef.current)
+      positionTimerRef.current = null
+    }
+
     window.onSpotifyWebPlaybackSDKReady = () => {
+      if (!active || !window.Spotify) return
+
       const player = new window.Spotify.Player({
         name: 'Moodify Player',
-        getOAuthToken: (cb) => { const t = getToken(); if (t) cb(t) },
+        getOAuthToken: (cb) => {
+          const currentToken = getToken()
+          if (currentToken) cb(currentToken)
+        },
         volume: 0.7,
       })
 
@@ -26,11 +43,15 @@ export function useSpotifyPlayer() {
 
       player.addListener('ready', ({ device_id }) => {
         deviceIdRef.current = device_id
+        setError(null)
         setIsReady(true)
       })
 
-      player.addListener('not_ready', () => setIsReady(false))
-      player.addListener('initialization_error', ({ message }) => setError(`Init: ${message}`))
+      player.addListener('not_ready', () => {
+        deviceIdRef.current = null
+        setIsReady(false)
+      })
+      player.addListener('initialization_error', ({ message }) => setError(`Initialisation Spotify: ${message}`))
       player.addListener('authentication_error', ({ message }) => {
         setNeedsReauth(true)
         setError(message)
@@ -38,7 +59,12 @@ export function useSpotifyPlayer() {
       player.addListener('account_error', () => setError('Spotify Premium requis'))
 
       player.addListener('player_state_changed', (state) => {
-        if (!state) { setPlayerState(null); return }
+        clearPositionTimer()
+
+        if (!state) {
+          setPlayerState(null)
+          return
+        }
 
         setPlayerState({
           track: state.track_window.current_track,
@@ -47,17 +73,20 @@ export function useSpotifyPlayer() {
           duration: state.duration,
         })
 
-        clearInterval(positionTimerRef.current)
         if (!state.paused) {
-          let pos = state.position
+          let position = state.position
           positionTimerRef.current = setInterval(() => {
-            pos += 1000
-            setPlayerState(prev => prev ? { ...prev, position: pos } : prev)
+            position += 1000
+            setPlayerState(prev => prev ? { ...prev, position } : prev)
           }, 1000)
         }
       })
 
-      player.connect()
+      player.connect().then((connected) => {
+        if (!connected && active) {
+          setError("Le player Spotify n'a pas pu se connecter.")
+        }
+      })
     }
 
     if (!document.getElementById('spotify-sdk')) {
@@ -71,31 +100,42 @@ export function useSpotifyPlayer() {
     }
 
     return () => {
+      active = false
       playerRef.current?.disconnect()
-      clearInterval(positionTimerRef.current)
+      playerRef.current = null
+      deviceIdRef.current = null
+      clearPositionTimer()
     }
   }, [])
 
-  // 🎯 BUT : Lance une playlist
-  // ⚠️ ATTENTION : "Device not found" arrive quand Spotify ne reconnaît pas encore le device
-  //   Fix : on transfère d'abord la lecture vers notre device, puis on joue
-  async function playPlaylist(playlistId) {
+  const playPlaylist = useCallback(async (playlistId) => {
     const token = getToken()
     const deviceId = deviceIdRef.current
-    if (!token || !deviceId) return
 
-    // Étape 1 : transférer la lecture vers notre device Moodify
-    await fetch('https://api.spotify.com/v1/me/player', {
+    setError(null)
+
+    if (!token) {
+      setNeedsReauth(true)
+      throw new Error('Session Spotify expirée, reconnecte-toi.')
+    }
+
+    if (!deviceId) {
+      throw new Error("Le player Spotify n'est pas encore prêt.")
+    }
+
+    const transferRes = await fetch('https://api.spotify.com/v1/me/player', {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ device_ids: [deviceId], play: false }),
     })
 
-    // Étape 2 : petite pause pour laisser Spotify enregistrer le device
-    await new Promise(r => setTimeout(r, 800))
+    if (!transferRes.ok && transferRes.status !== 204) {
+      throw new Error(await readSpotifyError(transferRes, `Transfert Spotify impossible (${transferRes.status})`))
+    }
 
-    // Étape 3 : lancer la playlist
-    const res = await fetch(
+    await new Promise((resolve) => setTimeout(resolve, 800))
+
+    const playRes = await fetch(
       `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
       {
         method: 'PUT',
@@ -104,16 +144,15 @@ export function useSpotifyPlayer() {
       }
     )
 
-    if (!res.ok && res.status !== 204) {
-      const data = await res.json().catch(() => ({}))
-      setError(data?.error?.message ?? 'Erreur lecture Spotify')
+    if (!playRes.ok && playRes.status !== 204) {
+      throw new Error(await readSpotifyError(playRes, `Lecture Spotify impossible (${playRes.status})`))
     }
-  }
+  }, [])
 
-  function togglePlay() { playerRef.current?.togglePlay() }
-  function nextTrack()  { playerRef.current?.nextTrack() }
-  function prevTrack()  { playerRef.current?.previousTrack() }
-  function seekTo(ms)   { playerRef.current?.seek(ms) }
+  const togglePlay = useCallback(() => { playerRef.current?.togglePlay() }, [])
+  const nextTrack = useCallback(() => { playerRef.current?.nextTrack() }, [])
+  const prevTrack = useCallback(() => { playerRef.current?.previousTrack() }, [])
+  const seekTo = useCallback((ms) => { playerRef.current?.seek(Math.max(0, ms)) }, [])
 
   return { isReady, error, needsReauth, playerState, playPlaylist, togglePlay, nextTrack, prevTrack, seekTo }
 }

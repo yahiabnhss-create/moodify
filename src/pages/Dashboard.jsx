@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { useHistory } from '../hooks/useHistory'
 import { useFavorites } from '../hooks/useFavorites'
@@ -44,26 +44,40 @@ function Dashboard() {
   const [confirmClear, setConfirmClear] = useState(false)
 
   // Données filtrées par période pour les stats et l'historique
-  const periodFiltered = filterByPeriod(period)
+  const periodFiltered = useMemo(
+    () => filterByPeriod(period),
+    [filterByPeriod, period]
+  )
 
   // Stats émotions calculées depuis l'historique filtré
-  const emotionStats = computeEmotionStats(periodFiltered)
+  const emotionStats = useMemo(
+    () => computeEmotionStats(periodFiltered),
+    [computeEmotionStats, periodFiltered]
+  )
 
   // Émotion dominante = celle avec le plus de sessions
-  const dominant = emotionStats.reduce((max, e) => e.count > (max?.count ?? 0) ? e : max, null)
+  const dominant = useMemo(
+    () => emotionStats.reduce((max, e) => e.count > (max?.count ?? 0) ? e : max, null),
+    [emotionStats]
+  )
 
   // Historique filtré par émotion en plus de la période
-  const historyFiltered = emotionFilter === 'all'
-    ? periodFiltered
-    : periodFiltered.filter(s => s.emotion === emotionFilter)
+  const historyFiltered = useMemo(
+    () => emotionFilter === 'all'
+      ? periodFiltered
+      : periodFiltered.filter(s => s.emotion === emotionFilter),
+    [emotionFilter, periodFiltered]
+  )
 
   // Top favoris par émotion : on groupe les favoris par emotionAtLike
   // 💡 CONCEPT : reduce() pour grouper un tableau en objet { emotion: [tracks] }
-  const favsByEmotion = favorites.reduce((acc, fav) => {
-    const key = fav.emotionAtLike ?? 'inconnu'
-    acc[key] = acc[key] ? [...acc[key], fav] : [fav]
-    return acc
-  }, {})
+  const favsByEmotion = useMemo(() => {
+    return favorites.reduce((acc, fav) => {
+      const key = fav.emotionAtLike ?? 'inconnu'
+      acc[key] = acc[key] ? [...acc[key], fav] : [fav]
+      return acc
+    }, {})
+  }, [favorites])
 
   return (
     <main className="dashboard">

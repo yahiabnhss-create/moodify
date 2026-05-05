@@ -1,43 +1,56 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-// 🎯 BUT : Remplace useState par une version qui persiste dans le localStorage
-// Quand la valeur change, elle est automatiquement sauvegardée dans le navigateur
-//
-// 💡 CONCEPT : localStorage vs useState
-//   useState  → valeur en mémoire, perdue au rechargement
-//   localStorage → valeur sur le disque, persiste entre sessions
-//   Ce hook combine les deux : réactivité de React + persistance du navigateur
-//
-// 💡 JSON.parse / JSON.stringify
-//   localStorage ne stocke que des strings. On convertit :
-//   - À l'écriture : JSON.stringify([{id:1}]) → '[{"id":1}]'
-//   - À la lecture  : JSON.parse('[{"id":1}]') → [{id:1}]
-//
-// @param key          {string} - clé dans le localStorage ex: "moodify_favorites"
-// @param initialValue {any}    - valeur par défaut si la clé n'existe pas encore
-// @returns [value, setValue]   - même interface que useState
+const LOCAL_STORAGE_EVENT = 'moodify:local-storage'
+
+function readStoredValue(key, initialValue) {
+  try {
+    const item = localStorage.getItem(key)
+    return item !== null ? JSON.parse(item) : initialValue
+  } catch {
+    return initialValue
+  }
+}
+
 export function useLocalStorage(key, initialValue) {
-  // 💡 useState avec fonction d'initialisation (lazy init)
-  //   La fonction n'est appelée qu'une seule fois au premier render
-  //   → évite de lire localStorage à chaque re-render
-  const [value, setValue] = useState(() => {
-    try {
-      const item = localStorage.getItem(key)
-      return item !== null ? JSON.parse(item) : initialValue
-    } catch {
-      // ⚠️ JSON.parse peut planter si la valeur stockée est corrompue
-      return initialValue
-    }
-  })
+  const initialValueRef = useRef(initialValue)
+  const [value, setValue] = useState(() => readStoredValue(key, initialValue))
 
-  // Synchronise le localStorage à chaque changement de valeur
   useEffect(() => {
     try {
       localStorage.setItem(key, JSON.stringify(value))
+      window.dispatchEvent(new CustomEvent(LOCAL_STORAGE_EVENT, {
+        detail: { key, value },
+      }))
     } catch {
-      // ⚠️ localStorage peut être plein (quota) ou désactivé (navigation privée)
+      // localStorage can be unavailable in private mode or when quota is exceeded.
     }
   }, [key, value])
+
+  useEffect(() => {
+    function handleStorage(event) {
+      if (event.key !== key) return
+
+      try {
+        setValue(event.newValue !== null ? JSON.parse(event.newValue) : initialValueRef.current)
+      } catch {
+        setValue(initialValueRef.current)
+      }
+    }
+
+    function handleLocalStorage(event) {
+      if (event.detail?.key === key) {
+        setValue(event.detail.value)
+      }
+    }
+
+    window.addEventListener('storage', handleStorage)
+    window.addEventListener(LOCAL_STORAGE_EVENT, handleLocalStorage)
+
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener(LOCAL_STORAGE_EVENT, handleLocalStorage)
+    }
+  }, [key])
 
   return [value, setValue]
 }

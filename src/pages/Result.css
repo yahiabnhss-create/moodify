@@ -6,30 +6,6 @@
   width: 100%;
 }
 
-.result-emotion {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.result-emotion-label {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--text-h);
-}
-
-.result-emotion-genre {
-  font-size: 13px;
-  font-weight: 500;
-  padding: 4px 12px;
-  border-radius: 20px;
-  background: var(--accent-bg);
-  color: var(--accent);
-  border: 1px solid var(--accent-border);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
 .result-playlist-title {
   align-self: flex-start;
   padding-left: calc((100% - 560px) / 2);

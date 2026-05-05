@@ -29,6 +29,10 @@
   flex-shrink: 0;
 }
 
+.playlist-card-img--placeholder {
+  background: linear-gradient(135deg, var(--accent-bg), var(--border));
+}
+
 .playlist-card-info {
   display: flex;
   flex-direction: column;
@@ -66,4 +70,35 @@
 
 .playlist-card-link:hover {
   opacity: 0.75;
+}
+
+.playlist-card-link--disabled {
+  color: var(--text);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fav-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.fav-btn:hover {
+  transform: scale(1.2);
+}
+
+.fav-btn--active {
+  animation: favorite-pop 0.2s ease;
+}
+
+@keyframes favorite-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
 }

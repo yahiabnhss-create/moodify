@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import EmotionDetector from '../components/EmotionDetector/EmotionDetector'
 import Playlist from '../components/Playlist/Playlist'
 import { EMOTIONS } from '../constants/emotions'
@@ -18,10 +18,11 @@ function SpotifyIcon({ size = 24 }) {
 }
 
 function Result() {
+  const detectRequestRef = useRef(0)
   const [connected, setConnected] = useState(!!getToken())
   const [detectedEmotion, setDetectedEmotion] = useState(null)
   const [detectedConfidence, setDetectedConfidence] = useState(0)
-  const [pendingPlaylistId, setPendingPlaylistId] = useState(null)
+  const [pendingPlayback, setPendingPlayback] = useState(null)
   const [tracks, setTracks] = useState([])
   const [loadingTracks, setLoadingTracks] = useState(false)
   const [apiError, setApiError] = useState(null)
@@ -32,53 +33,113 @@ function Result() {
 
   const currentEmotion = detectedEmotion ? EMOTIONS[detectedEmotion] : null
 
-  // Si le player n'était pas prêt au moment de la détection, joue dès qu'il est prêt
   useEffect(() => {
-    if (isReady && pendingPlaylistId) {
-      playPlaylist(pendingPlaylistId)
-      setPendingPlaylistId(null)
-    }
-  }, [isReady, pendingPlaylistId])
+    if (!isReady || !pendingPlayback) return
 
-  async function handleDetect({ emotion, confidence }) {
+    let cancelled = false
+
+    async function playPending() {
+      try {
+        if (pendingPlayback.requestId !== detectRequestRef.current) return
+        await playPlaylist(pendingPlayback.playlistId)
+        if (cancelled || pendingPlayback.requestId !== detectRequestRef.current) return
+
+        addSession(
+          pendingPlayback.emotion,
+          pendingPlayback.confidence,
+          pendingPlayback.playlistId,
+          pendingPlayback.playlistName
+        )
+        setPendingPlayback(null)
+      } catch (err) {
+        if (!cancelled && pendingPlayback.requestId === detectRequestRef.current) {
+          setApiError(err.message)
+        }
+      }
+    }
+
+    void playPending()
+
+    return () => {
+      cancelled = true
+    }
+  }, [addSession, isReady, pendingPlayback, playPlaylist])
+
+  const handleDetect = useCallback(async ({ emotion, confidence }) => {
+    const requestId = detectRequestRef.current + 1
+    detectRequestRef.current = requestId
+
     setDetectedEmotion(emotion)
     setDetectedConfidence(confidence)
+    setPendingPlayback(null)
     setTracks([])
     setApiError(null)
 
     const emotionData = EMOTIONS[emotion]
-    if (!emotionData) return
-
-    if (isReady) {
-      await playPlaylist(emotionData.playlistId)
-      addSession(emotion, confidence, emotionData.playlistId, emotionData.label)
-    } else {
-      // Player pas encore prêt → on met en attente
-      setPendingPlaylistId(emotionData.playlistId)
+    if (!emotionData) {
+      setApiError(`Émotion inconnue: ${emotion}`)
+      return
     }
 
-    // Charge la liste des pistes pour l'affichage
+    const playback = {
+      requestId,
+      emotion,
+      confidence,
+      playlistId: emotionData.playlistId,
+      playlistName: emotionData.label,
+    }
+
+    if (isReady) {
+      try {
+        await playPlaylist(emotionData.playlistId)
+        addSession(emotion, confidence, emotionData.playlistId, emotionData.label)
+      } catch (err) {
+        setApiError(err.message)
+      }
+    } else {
+      setPendingPlayback(playback)
+    }
+
     setLoadingTracks(true)
     try {
       const results = await getPlaylistTracks(emotionData)
+      if (detectRequestRef.current !== requestId) return
       setTracks(results)
-    } catch (e) {
-      setApiError(e.message)
+    } catch (err) {
+      if (detectRequestRef.current !== requestId) return
+      setApiError(err.message)
     } finally {
-      setLoadingTracks(false)
+      if (detectRequestRef.current === requestId) {
+        setLoadingTracks(false)
+      }
     }
-  }
+  }, [addSession, isReady, playPlaylist])
+
+  const handleLogin = useCallback(async () => {
+    setApiError(null)
+    try {
+      await loginWithSpotify()
+    } catch (err) {
+      setApiError(err.message)
+    }
+  }, [])
 
   function handleLogout() {
+    detectRequestRef.current += 1
     logout()
     setConnected(false)
     setDetectedEmotion(null)
+    setDetectedConfidence(0)
+    setPendingPlayback(null)
     setTracks([])
+    setApiError(null)
   }
 
   function handleChangeMood() {
+    detectRequestRef.current += 1
     setDetectedEmotion(null)
     setDetectedConfidence(0)
+    setPendingPlayback(null)
     setTracks([])
     setApiError(null)
   }
@@ -89,7 +150,8 @@ function Result() {
         <div className="spotify-connect">
           <SpotifyIcon size={48} />
           <p>Connecte-toi à Spotify pour obtenir ta playlist</p>
-          <button className="spotify-btn" onClick={loginWithSpotify}>
+          {apiError && <p className="result-error">{apiError}</p>}
+          <button className="spotify-btn" onClick={() => void handleLogin()}>
             <SpotifyIcon size={20} />
             Se connecter avec Spotify
           </button>
@@ -100,7 +162,6 @@ function Result() {
 
   return (
     <main>
-      {/* Statut Spotify */}
       <div className="spotify-status">
         <span className="spotify-badge">
           <SpotifyIcon size={16} />
@@ -112,17 +173,16 @@ function Result() {
       {needsReauth && (
         <div className="reauth-banner">
           <p>Tes droits Spotify ont changé. Reconnecte-toi.</p>
-          <button className="spotify-btn" onClick={() => { handleLogout(); loginWithSpotify() }}>
+          <button className="spotify-btn" onClick={() => { handleLogout(); void handleLogin() }}>
             <SpotifyIcon size={18} /> Reconnecter Spotify
           </button>
         </div>
       )}
       {playerError && !needsReauth && <p className="result-error">{playerError}</p>}
+      {apiError && <p className="result-error">{apiError}</p>}
 
-      {/* Webcam toujours visible */}
       <EmotionDetector onDetect={handleDetect} />
 
-      {/* Résultat affiché sous la webcam */}
       {currentEmotion && (
         <div className="emotion-result">
           <div className="emotion-result-badge">
@@ -130,8 +190,8 @@ function Result() {
             <span className="emotion-genre">{currentEmotion.genre}</span>
             <span className="emotion-confidence">{Math.round(detectedConfidence * 100)}% de confiance</span>
           </div>
-          {isReady && <p className="now-playing">🎵 Playlist en cours de lecture dans Spotify</p>}
-          {!isReady && <p className="now-playing">⏳ Player en cours d'initialisation...</p>}
+          {isReady && <p className="now-playing">Playlist en cours de lecture dans Spotify</p>}
+          {!isReady && <p className="now-playing">Player en cours d'initialisation...</p>}
           <button className="change-mood-btn" onClick={handleChangeMood}>
             Changer d'humeur
           </button>

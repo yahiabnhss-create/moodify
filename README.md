@@ -1,42 +1,31 @@
-moodify/
+# Moodify
 
-├── index.html                   # Point d'entrée HTML (Vite)
-├── vite.config.js               # Config Vite (bundler)
-├── eslint.config.js             # Config ESLint (linting)
-├── package.json                 # Dépendances & scripts npm
-├── public/
-│   ├── favicon.svg
-│   └── icons.svg                # Icônes SVG globales
-└── src/
-    ├── main.jsx                 # Montage React (ReactDOM.render)
-    ├── App.jsx                  # Composant racine, routing principal
-    ├── App.css / index.css      # Styles globaux
-    │
-    ├── assets/                  # Images statiques (hero, logos)
-    │
-    ├── components/              # Composants UI réutilisables
-    │   ├── Camera/              # Accès webcam, affichage flux vidéo
-    │   ├── EmotionDetector/     # Analyse et affichage de l'émotion
-    │   ├── Favorites/           # Gestion des playlists favorites
-    │   ├── Layout/Header.*      # Header/navigation
-    │   └── Playlist/            # Affichage des playlists & cards
-    │       ├── Playlist.jsx
-    │       └── PlaylistCard.jsx
-    │
-    ├── context/
-    │   └── AppContext.jsx       # État global partagé (Context API)
-    │
-    ├── hooks/                   # Logique métier encapsulée
-    │   ├── useCamera.js         # Gestion de la caméra
-    │   ├── useEmotion.js        # Détection d'émotion
-    │   └── useFavorites.js      # Persistance des favoris
-    │
-    ├── services/                # Appels vers APIs externes
-    │   ├── faceApi.js           # Intégration face-api.js (ML)
-    │   └── spotify.js           # Appels API Spotify
-    │
-    ├── constants/
-    │   └── emotions.js          # Liste des émotions supportées
-    │
-    └── utils/
-        └── emotionMapping.js    # Correspondance émotion → playlist
+Moodify est une app React/Vite qui détecte une humeur via la webcam, normalise l'émotion avec `face-api.js`, puis lance une playlist Spotify adaptée.
+
+## Scripts
+
+- `npm run dev` démarre Vite en HTTPS local pour faciliter l'accès webcam.
+- `npm run build` génère la version production dans `dist/`.
+- `npm run lint` vérifie les règles ESLint et React Hooks.
+- `npm run preview` sert le build localement.
+
+## Structure
+
+- `src/components/EmotionDetector/` gère la webcam et la détection d'émotion.
+- `src/components/Playlist/` affiche les titres Spotify et l'état favori.
+- `src/components/Player/` affiche le player Spotify compact ou plein écran.
+- `src/hooks/` contient la persistance locale, les favoris, l'historique, la stabilité d'émotion et le SDK Spotify.
+- `src/services/` regroupe `face-api.js` et les appels Spotify.
+- `src/pages/` contient les vues accueil, résultat, favoris, dashboard et callback Spotify.
+- `public/models/` contient les modèles `face-api.js` utilisés côté navigateur.
+
+## Variables D'environnement
+
+Crée un fichier `.env.local` avec au minimum:
+
+```env
+VITE_SPOTIFY_CLIENT_ID=ton_client_id
+VITE_SPOTIFY_REDIRECT_URI=https://localhost:5173/callback
+```
+
+La webcam fonctionne uniquement dans un contexte sécurisé: `https://`, `localhost`, ou une configuration équivalente acceptée par le navigateur.
