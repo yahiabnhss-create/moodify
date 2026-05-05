@@ -26,6 +26,15 @@ export async function loginWithSpotify() {
     client_id: CLIENT_ID,
     response_type: 'code',
     redirect_uri: REDIRECT_URI,
+    // 🎯 BUT : Ces scopes donnent à l'app le droit de lire et contrôler la lecture Spotify
+    // ⚠️ ATTENTION : sans "streaming", le Web Playback SDK refusera de s'initialiser
+    scope: [
+      'streaming',
+      'user-read-email',
+      'user-read-private',
+      'user-read-playback-state',
+      'user-modify-playback-state',
+    ].join(' '),
     code_challenge_method: 'S256',
     code_challenge: challenge,
   })

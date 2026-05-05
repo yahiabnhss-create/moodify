@@ -1,32 +1,30 @@
+// 🎯 BUT : Source de vérité pour les émotions de l'app
+// Chaque émotion a un label affiché, un genre musical, et un ID de playlist Spotify
+
 export const EMOTIONS = {
   happy: {
     label: "Heureux 😄",
     genre: "pop",
-    // Happy Hits! — Spotify editorial
-    playlistId: "37i9dQZF1DXdPec7aLTmlC",
-  },
-  sad: {
-    label: "Triste 😢",
-    genre: "sad",
-    // Life Sucks — Spotify editorial
-    playlistId: "37i9dQZF1DX3YSRoSdA634",
-  },
-  neutral: {
-    label: "Neutre 😐",
-    genre: "indie",
-    // Chill Hits — Spotify editorial
-    playlistId: "37i9dQZF1DX4WYpdgoIcn6",
-  },
-  angry: {
-    label: "En colère 😠",
-    genre: "rock",
-    // Rage Beats — Spotify editorial
-    playlistId: "37i9dQZF1DWTggY0yqBxES",
+    playlistId: "37i9dQZF1EVJHK7Q1TBABQ", // Bonne humeur
   },
   surprised: {
     label: "Surpris 😲",
-    genre: "electronic",
-    // mint — fresh electronic/pop — Spotify editorial
-    playlistId: "37i9dQZF1DX4dyzvuaRJ0n",
+    genre: "pop",
+    playlistId: "37i9dQZF1EVJHK7Q1TBABQ", // Bonne humeur (énergie positive)
+  },
+  sad: {
+    label: "Triste 😢",
+    genre: "melancolique",
+    playlistId: "32HiyEXKoCYkxazhRNs1Mn", // Mix Mélancolique
+  },
+  angry: {
+    label: "En colère 😠",
+    genre: "détente",
+    playlistId: "37i9dQZF1EVHGWrwldPRtj", // Mix Détente (pour calmer)
+  },
+  neutral: {
+    label: "Neutre 😐",
+    genre: "chill",
+    playlistId: "37i9dQZEVXbMDoHDwVN2tF", // Top 50 Global / Chill Relax
   },
 }

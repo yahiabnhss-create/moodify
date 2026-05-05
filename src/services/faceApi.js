@@ -6,7 +6,12 @@ export async function loadModels() {
   await faceapi.nets.faceExpressionNet.loadFromUri('/models')
 }
 
-// Analyse le visage visible dans la <video> et retourne l'émotion dominante
+// 🎯 BUT : Analyse le visage visible dans la <video>
+// @param videoEl {HTMLVideoElement} - l'élément vidéo de la caméra
+// @returns {{ emotion: string, confidence: number } | null}
+//   - emotion    : l'émotion dominante ex: "happy"
+//   - confidence : score entre 0 et 1 ex: 0.94
+//   - null si aucun visage détecté
 export async function detectEmotion(videoEl) {
   const result = await faceapi
     .detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions())
@@ -26,5 +31,8 @@ export async function detectEmotion(videoEl) {
     }
   }
 
-  return topEmotion // ex: "happy"
+  // 💡 CONCEPT : On retourne maintenant un objet { emotion, confidence }
+  // au lieu d'une simple string, pour que le hook de stabilité puisse
+  // filtrer les détections peu fiables (confidence < 0.6)
+  return { emotion: topEmotion, confidence: topScore }
 }
