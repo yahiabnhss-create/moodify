@@ -1,30 +1,30 @@
 // 🎯 BUT : Source de vérité pour les émotions de l'app
-// Chaque émotion a un label affiché, un genre musical, et un ID de playlist Spotify
+// Tous les IDs sont des playlists éditoriales Spotify vérifiées
 
 export const EMOTIONS = {
   happy: {
     label: "Heureux 😄",
     genre: "pop",
-    playlistId: "37i9dQZF1EVJHK7Q1TBABQ", // Bonne humeur
+    playlistId: "37i9dQZF1DXdPec7aLTmlC", // Happy Hits!
   },
   surprised: {
     label: "Surpris 😲",
-    genre: "pop",
-    playlistId: "37i9dQZF1EVJHK7Q1TBABQ", // Bonne humeur (énergie positive)
+    genre: "electronic",
+    playlistId: "37i9dQZF1DX4dyzvuaRJ0n", // mint — fresh electronic/pop
   },
   sad: {
     label: "Triste 😢",
-    genre: "melancolique",
-    playlistId: "32HiyEXKoCYkxazhRNs1Mn", // Mix Mélancolique
+    genre: "mélancolique",
+    playlistId: "37i9dQZF1DX3YSRoSdA634", // Life Sucks
   },
   angry: {
     label: "En colère 😠",
     genre: "détente",
-    playlistId: "37i9dQZF1EVHGWrwldPRtj", // Mix Détente (pour calmer)
+    playlistId: "37i9dQZF1DWTggY0yqBxES", // Rage Beats
   },
   neutral: {
     label: "Neutre 😐",
     genre: "chill",
-    playlistId: "37i9dQZEVXbMDoHDwVN2tF", // Top 50 Global / Chill Relax
+    playlistId: "37i9dQZF1DX4WYpdgoIcn6", // Chill Hits
   },
 }

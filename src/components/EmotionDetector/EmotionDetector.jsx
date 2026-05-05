@@ -1,37 +1,20 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { loadModels, detectEmotion } from '../../services/faceApi'
 import { normalizeEmotion } from '../../utils/emotionMapping'
 import './EmotionDetector.css'
 
-// Intervalle entre chaque analyse (en ms)
-// 💡 1500ms = assez rapide pour capter les changements, assez lent pour ne pas surcharger le CPU
-const DETECTION_INTERVAL = 1500
+const CONFIDENCE_THRESHOLD = 0.5
 
-// 🎯 BUT : Affiche la caméra et détecte les émotions en continu
-// @param onDetect {function({ emotion, confidence })} - appelée à chaque détection valide
-// @param paused   {boolean} - si true, met la détection en pause (sans arrêter la caméra)
-function EmotionDetector({ onDetect, paused = false }) {
+// 🎯 BUT : Affiche la caméra et détecte l'émotion au clic sur un bouton
+// @param onDetect {function({ emotion, confidence })} - appelée quand une émotion est trouvée
+function EmotionDetector({ onDetect }) {
   const videoRef = useRef(null)
-  const intervalRef = useRef(null) // 💡 useRef pour stocker le timer sans déclencher de re-render
-
   const [ready, setReady] = useState(false)
-  const [running, setRunning] = useState(false)
-  const [lastResult, setLastResult] = useState(null) // { emotion, confidence } de la dernière frame
+  const [detecting, setDetecting] = useState(false)
   const [error, setError] = useState(null)
 
-  // 💡 Quand paused passe à true (émotion stable détectée), on arrête l'interval
-  useEffect(() => {
-    if (paused) {
-      clearInterval(intervalRef.current)
-      setRunning(false)
-      setLastResult(null)
-    }
-  }, [paused])
-
-  // Démarre la caméra et charge les modèles IA au montage du composant
   useEffect(() => {
     let stream
-
     loadModels()
 
     navigator.mediaDevices
@@ -43,42 +26,31 @@ function EmotionDetector({ onDetect, paused = false }) {
       })
       .catch(err => setError(err.message))
 
-    // Nettoyage : on coupe la caméra quand on quitte la page
-    return () => {
-      stream?.getTracks().forEach(t => t.stop())
-      clearInterval(intervalRef.current)
-    }
+    return () => stream?.getTracks().forEach(t => t.stop())
   }, [])
 
-  // 🎯 BUT : Lance une analyse toutes les DETECTION_INTERVAL ms
-  // 💡 CONCEPT : useCallback évite de recréer cette fonction à chaque render
-  //    ce qui est important car elle est utilisée dans un setInterval
-  const startDetection = useCallback(() => {
-    setRunning(true)
+  // 🎯 BUT : Déclenche UNE seule analyse à la demande de l'utilisateur
+  async function handleDetect() {
+    setDetecting(true)
     setError(null)
 
-    intervalRef.current = setInterval(async () => {
-      const raw = await detectEmotion(videoRef.current)
+    const raw = await detectEmotion(videoRef.current)
 
-      if (!raw) {
-        setLastResult(null)
-        return
-      }
+    if (!raw) {
+      setError('Aucun visage détecté. Place-toi face à la caméra et réessaie.')
+      setDetecting(false)
+      return
+    }
 
-      const emotion = normalizeEmotion(raw.emotion)
-      const result = { emotion, confidence: raw.confidence }
+    if (raw.confidence < CONFIDENCE_THRESHOLD) {
+      setError(`Confiance trop faible (${Math.round(raw.confidence * 100)}%). Réessaie.`)
+      setDetecting(false)
+      return
+    }
 
-      setLastResult(result)
-      // On remonte le résultat brut au parent (useEmotionStability filtrera ensuite)
-      onDetect(result)
-    }, DETECTION_INTERVAL)
-  }, [onDetect])
-
-  // 🎯 BUT : Arrête la détection continue
-  function stopDetection() {
-    clearInterval(intervalRef.current)
-    setRunning(false)
-    setLastResult(null)
+    // On remonte l'émotion normalisée au composant parent
+    onDetect({ emotion: normalizeEmotion(raw.emotion), confidence: raw.confidence })
+    setDetecting(false)
   }
 
   if (error && !ready) {
@@ -89,28 +61,9 @@ function EmotionDetector({ onDetect, paused = false }) {
     <div className="emotion-detector">
       <video ref={videoRef} autoPlay muted playsInline className="camera-video" />
 
-      <div className="detector-controls">
-        {!running ? (
-          <button onClick={startDetection} disabled={!ready}>
-            Démarrer la détection
-          </button>
-        ) : (
-          <button onClick={stopDetection} className="stop-btn">
-            Arrêter
-          </button>
-        )}
-      </div>
-
-      {/* Affichage temps réel de la dernière détection */}
-      {running && lastResult && (
-        <p className="detection-live">
-          Détecté : <strong>{lastResult.emotion}</strong> — confiance : <strong>{Math.round(lastResult.confidence * 100)}%</strong>
-        </p>
-      )}
-
-      {running && !lastResult && (
-        <p className="detection-live">Recherche d'un visage...</p>
-      )}
+      <button onClick={handleDetect} disabled={!ready || detecting}>
+        {detecting ? 'Analyse en cours...' : 'Détecter mon humeur'}
+      </button>
 
       {error && ready && <p className="error">{error}</p>}
     </div>
