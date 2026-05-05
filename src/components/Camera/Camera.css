@@ -1,0 +1,7 @@
+.camera-video {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 12px;
+  display: block;
+  background: #000;
+}
