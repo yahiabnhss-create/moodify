@@ -1,29 +1,78 @@
 .emotion-detector {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  align-items: stretch;
+  gap: 12px;
 }
 
 .camera-video {
   width: 100%;
-  max-width: 480px;
-  border-radius: 12px;
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgba(255, 255, 252, 0.12);
+  border-radius: var(--radius);
   display: block;
-  background: #000;
+  object-fit: cover;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 252, 0.06), transparent),
+    #050704;
+}
+
+.emotion-detector button {
+  width: 100%;
+  background: #fffffb;
+  color: var(--text-h);
+}
+
+.emotion-detector button:hover {
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
 }
 
 .emotion-detector button:disabled {
-  opacity: 0.6;
+  opacity: 0.62;
   cursor: not-allowed;
 }
 
 .secondary-btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: rgba(255, 255, 252, 0.1) !important;
+  border-color: rgba(255, 255, 252, 0.2);
+  color: #fffffb !important;
+}
+
+.stability-countdown {
+  display: grid;
+  gap: 8px;
+  padding: 10px 2px 2px;
+  color: rgba(255, 255, 252, 0.72);
+  font-size: 13px;
+}
+
+.countdown-bar {
+  height: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 252, 0.13);
+}
+
+.countdown-bar::after {
+  content: '';
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: linear-gradient(90deg, var(--mood, var(--accent)), #fffffb);
+  transform-origin: left;
+  animation: fill-bar 3s linear forwards;
 }
 
 .error {
-  color: #e55;
+  padding: 12px;
+  border: 1px solid rgba(240, 79, 66, 0.34);
+  border-radius: var(--radius);
+  background: rgba(240, 79, 66, 0.12);
+  color: #ffd9d6;
+  font-size: 14px;
+}
+
+@keyframes fill-bar {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }

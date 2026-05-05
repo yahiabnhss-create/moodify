@@ -4,7 +4,7 @@ function Home() {
   const navigate = useNavigate()
 
   return (
-    <main>
+    <main className="home-page">
       <h2>Comment tu te sens aujourd'hui ?</h2>
       <p>Laisse ta caméra détecter ton humeur et on te propose une playlist adaptée.</p>
       <button onClick={() => navigate('/result')}>

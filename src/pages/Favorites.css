@@ -1,50 +1,53 @@
 .favorites-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 24px 16px;
-  width: 100%;
+  width: min(920px, 100%);
+  align-self: center;
+  align-items: stretch;
+  gap: 22px;
 }
 
 .favorites-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  width: 100%;
-  max-width: 560px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .favorites-header h2 {
   flex: 1;
-  margin: 0;
 }
 
 .favorites-count {
-  font-size: 16px;
-  font-weight: 500;
-  opacity: 0.5;
-  margin-left: 6px;
+  margin-left: 8px;
+  color: var(--accent);
+  font-size: 18px;
 }
 
 .favorites-empty {
-  opacity: 0.6;
+  padding: 40px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
   text-align: center;
-  margin-top: 48px;
+  color: rgba(18, 23, 16, 0.58);
 }
 
-/* Bouton effacer tout */
-.favorites-clear-btn {
-  background: none;
-  border: 1px solid #e05;
-  color: #e05;
-  border-radius: 8px;
-  padding: 4px 12px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: opacity 0.15s;
+.favorites-clear-btn,
+.favorites-confirm-yes,
+.favorites-confirm-no {
+  min-height: 36px;
+  padding: 7px 12px;
 }
-.favorites-clear-btn:hover { opacity: 0.7; }
+
+.favorites-clear-btn {
+  background: rgba(207, 48, 68, 0.08);
+  border-color: rgba(207, 48, 68, 0.26);
+  color: var(--danger);
+}
 
 .favorites-confirm-clear {
   display: flex;
@@ -52,69 +55,67 @@
   gap: 8px;
   font-size: 13px;
 }
+
 .favorites-confirm-yes {
-  background: #e05;
+  background: var(--danger);
   color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 3px 10px;
-  cursor: pointer;
-}
-.favorites-confirm-no {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 3px 10px;
-  cursor: pointer;
 }
 
-/* Filtres par émotion */
+.favorites-confirm-no {
+  background: rgba(255, 255, 252, 0.68);
+  border-color: var(--border);
+  color: var(--text-h);
+}
+
 .favorites-filters {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  width: 100%;
-  max-width: 560px;
 }
 
 .favorites-filter-chip {
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: 7px;
   background: var(--accent-bg);
   color: var(--accent);
-  border: 1px solid var(--accent-border);
-  border-radius: 20px;
-  padding: 4px 14px;
   font-size: 13px;
-  cursor: pointer;
-  transition: opacity 0.15s;
-  opacity: 0.6;
 }
-.favorites-filter-chip:hover { opacity: 1; }
-.favorites-filter-chip--active { opacity: 1; font-weight: 600; }
 
-/* Liste */
+.favorites-filter-chip--active {
+  background: var(--text-h);
+  color: #fff;
+  border-color: var(--text-h);
+}
+
 .favorites-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  max-width: 560px;
+  display: grid;
+  gap: 14px;
 }
 
 .favorite-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  gap: 6px;
 }
 
 .favorite-meta {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 4px;
+  padding-inline: 2px;
+  color: rgba(18, 23, 16, 0.58);
   font-size: 12px;
-  opacity: 0.6;
 }
 
 .favorite-emotion {
-  font-weight: 500;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+@media (max-width: 620px) {
+  .favorites-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

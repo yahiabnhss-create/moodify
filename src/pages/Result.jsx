@@ -32,6 +32,7 @@ function Result() {
   const { addSession } = useHistory()
 
   const currentEmotion = detectedEmotion ? EMOTIONS[detectedEmotion] : null
+  const moodClass = `mood-page mood-page--${detectedEmotion ?? 'idle'}`
 
   useEffect(() => {
     if (!isReady || !pendingPlayback) return
@@ -146,10 +147,12 @@ function Result() {
 
   if (!connected) {
     return (
-      <main>
+      <main className="connect-page">
         <div className="spotify-connect">
+          <span className="studio-kicker">Moodify Studio</span>
+          <h2>Ta playlist commence par une émotion.</h2>
           <SpotifyIcon size={48} />
-          <p>Connecte-toi à Spotify pour obtenir ta playlist</p>
+          <p>Connecte-toi à Spotify pour synchroniser la recommandation musicale.</p>
           {apiError && <p className="result-error">{apiError}</p>}
           <button className="spotify-btn" onClick={() => void handleLogin()}>
             <SpotifyIcon size={20} />
@@ -161,48 +164,85 @@ function Result() {
   }
 
   return (
-    <main>
-      <div className="spotify-status">
-        <span className="spotify-badge">
-          <SpotifyIcon size={16} />
-          {isReady ? 'Player prêt' : 'Connexion player...'}
-        </span>
-        <button className="logout-btn" onClick={handleLogout}>Déconnecter</button>
-      </div>
-
-      {needsReauth && (
-        <div className="reauth-banner">
-          <p>Tes droits Spotify ont changé. Reconnecte-toi.</p>
-          <button className="spotify-btn" onClick={() => { handleLogout(); void handleLogin() }}>
-            <SpotifyIcon size={18} /> Reconnecter Spotify
-          </button>
-        </div>
-      )}
-      {playerError && !needsReauth && <p className="result-error">{playerError}</p>}
-      {apiError && <p className="result-error">{apiError}</p>}
-
-      <EmotionDetector onDetect={handleDetect} />
-
-      {currentEmotion && (
-        <div className="emotion-result">
-          <div className="emotion-result-badge">
-            <span className="emotion-label">{currentEmotion.label}</span>
-            <span className="emotion-genre">{currentEmotion.genre}</span>
-            <span className="emotion-confidence">{Math.round(detectedConfidence * 100)}% de confiance</span>
+    <main className={moodClass}>
+      <section className="studio-shell">
+        <div className="studio-topbar">
+          <div>
+            <span className="studio-kicker">Moodify Studio</span>
+            <h2>Un scan, une couleur, une playlist.</h2>
           </div>
-          {isReady && <p className="now-playing">Playlist en cours de lecture dans Spotify</p>}
-          {!isReady && <p className="now-playing">Player en cours d'initialisation...</p>}
-          <button className="change-mood-btn" onClick={handleChangeMood}>
-            Changer d'humeur
-          </button>
+          <div className="spotify-status">
+            <span className="spotify-badge">
+              <SpotifyIcon size={16} />
+              {isReady ? 'Player prêt' : 'Connexion player...'}
+            </span>
+            <button className="logout-btn" onClick={handleLogout}>Déconnecter</button>
+          </div>
         </div>
-      )}
+
+        {needsReauth && (
+          <div className="reauth-banner">
+            <p>Tes droits Spotify ont changé. Reconnecte-toi.</p>
+            <button className="spotify-btn" onClick={() => { handleLogout(); void handleLogin() }}>
+              <SpotifyIcon size={18} /> Reconnecter Spotify
+            </button>
+          </div>
+        )}
+        {playerError && !needsReauth && <p className="result-error">{playerError}</p>}
+        {apiError && <p className="result-error">{apiError}</p>}
+
+        <div className="studio-grid">
+          <section className="studio-copy">
+            <span className="studio-index">01</span>
+            <h1>{currentEmotion ? currentEmotion.label : 'Quelle énergie tu envoies ?'}</h1>
+            <p>
+              {currentEmotion
+                ? `Mood ${currentEmotion.genre}, confiance ${Math.round(detectedConfidence * 100)}%.`
+                : 'Moodify transforme ton expression en sélection musicale.'}
+            </p>
+
+            <div className="mood-spectrum" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+
+            {currentEmotion && (
+              <div className="emotion-result">
+                <div className="emotion-result-badge">
+                  <span className="emotion-label">{currentEmotion.label}</span>
+                  <span className="emotion-genre">{currentEmotion.genre}</span>
+                  <span className="emotion-confidence">{Math.round(detectedConfidence * 100)}%</span>
+                </div>
+                {isReady && <p className="now-playing">Playlist lancée dans Spotify</p>}
+                {!isReady && <p className="now-playing">Player en cours d'initialisation...</p>}
+                <button className="change-mood-btn" onClick={handleChangeMood}>
+                  Changer d'humeur
+                </button>
+              </div>
+            )}
+          </section>
+
+          <section className="camera-stage">
+            <div className="stage-ruler" aria-hidden="true">
+              <span>live</span>
+              <span>mood scan</span>
+            </div>
+            <EmotionDetector onDetect={handleDetect} />
+          </section>
+        </div>
+      </section>
 
       {loadingTracks && <p className="result-loading">Chargement des titres...</p>}
 
       {tracks.length > 0 && (
-        <div className="result-content">
-          <h3 className="result-playlist-title">Titres de la playlist</h3>
+        <section className="result-content">
+          <div className="playlist-heading">
+            <span className="studio-kicker">Sélection</span>
+            <h3 className="result-playlist-title">Titres recommandés</h3>
+          </div>
           <Playlist
             tracks={tracks}
             onFavorite={track =>
@@ -212,7 +252,7 @@ function Result() {
             }
             isFavorite={isFavorite}
           />
-        </div>
+        </section>
       )}
 
       <PlayerBar
