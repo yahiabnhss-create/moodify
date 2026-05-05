@@ -83,7 +83,7 @@ export async function getPlaylistTracks(emotion) {
   if (!token) throw new Error('Not authenticated')
 
   const res = await fetch(
-    `https://api.spotify.com/v1/playlists/${emotion.playlistId}/tracks?limit=20&fields=items(track(id,name,artists,album(images),external_urls))`,
+    `https://api.spotify.com/v1/playlists/${emotion.playlistId}/tracks?limit=20&market=from_token`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
 
@@ -95,12 +95,12 @@ export async function getPlaylistTracks(emotion) {
 
   const data = await res.json()
   return data.items
-    .filter((item) => item.track)
+    .filter((item) => item.track && item.track.id)
     .map((item) => ({
       id: item.track.id,
       name: item.track.name,
       artist: item.track.artists[0]?.name ?? '',
       image: item.track.album.images[0]?.url ?? '',
-      url: item.track.external_urls.spotify,
+      url: item.track.external_urls?.spotify ?? '',
     }))
 }

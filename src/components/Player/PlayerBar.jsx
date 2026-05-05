@@ -1,28 +1,22 @@
+import { useState } from 'react'
 import { useFavorites } from '../../hooks/useFavorites'
 import './PlayerBar.css'
 
-// Convertit des millisecondes en "m:ss"
 function formatTime(ms) {
   if (!ms) return '0:00'
   const s = Math.floor(ms / 1000)
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-// 🎯 BUT : Mini-player affiché en bas de page quand une piste est en cours
-// @param playerState  {{ track, paused, position, duration }}
-// @param onToggle     {function} — play / pause
-// @param onNext       {function} — piste suivante
-// @param onPrev       {function} — piste précédente
-// @param onSeek       {function(ms)} — déplacement dans la piste
-// @param currentEmotion {string|null} — émotion active pour sauvegarder le favori avec le contexte
 function PlayerBar({ playerState, onToggle, onNext, onPrev, onSeek, currentEmotion }) {
   const { addFavorite, removeFavorite, isFavorite } = useFavorites()
+  const [expanded, setExpanded] = useState(false)
 
   if (!playerState?.track) return null
 
   const { track, paused, position, duration } = playerState
+  const progress = duration > 0 ? (position / duration) * 100 : 0
 
-  // Construit un objet compatible avec notre système de favoris
   const trackForFav = {
     id: track.id,
     name: track.name,
@@ -32,7 +26,6 @@ function PlayerBar({ playerState, onToggle, onNext, onPrev, onSeek, currentEmoti
   }
 
   const fav = isFavorite(track.id)
-  const progress = duration > 0 ? (position / duration) * 100 : 0
 
   function handleFav() {
     fav ? removeFavorite(track.id) : addFavorite(trackForFav, currentEmotion)
@@ -40,41 +33,85 @@ function PlayerBar({ playerState, onToggle, onNext, onPrev, onSeek, currentEmoti
 
   function handleProgressClick(e) {
     const rect = e.currentTarget.getBoundingClientRect()
-    const ratio = (e.clientX - rect.left) / rect.width
-    onSeek(Math.floor(ratio * duration))
+    onSeek(Math.floor(((e.clientX - rect.left) / rect.width) * duration))
   }
 
-  return (
-    <div className="player-bar">
-      {/* Infos piste */}
-      <div className="player-track">
-        <img src={track.album.images[0]?.url} alt={track.name} className="player-cover" />
-        <div className="player-track-info">
-          <span className="player-track-name">{track.name}</span>
-          <span className="player-track-artist">{track.artists.map(a => a.name).join(', ')}</span>
+  // ── Vue expandée (plein écran) ─────────────────────────────────────
+  if (expanded) {
+    return (
+      <div className="player-fullscreen">
+        <button className="player-collapse-btn" onClick={() => setExpanded(false)}>✕</button>
+
+        <img
+          src={track.album.images[0]?.url}
+          alt={track.name}
+          className="player-full-cover"
+        />
+
+        <div className="player-full-info">
+          <span className="player-full-name">{track.name}</span>
+          <span className="player-full-artist">{track.artists.map(a => a.name).join(', ')}</span>
         </div>
+
         <button
-          className={`player-fav-btn ${fav ? 'player-fav-btn--active' : ''}`}
+          className={`player-fav-btn player-fav-btn--lg ${fav ? 'player-fav-btn--active' : ''}`}
           onClick={handleFav}
           title={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
         >
           {fav ? '❤️' : '🤍'}
         </button>
+
+        {/* Barre de progression */}
+        <div className="player-full-progress">
+          <span className="player-time">{formatTime(position)}</span>
+          <div className="player-progress-bar player-progress-bar--lg" onClick={handleProgressClick}>
+            <div className="player-progress-fill" style={{ width: `${progress}%` }} />
+          </div>
+          <span className="player-time">{formatTime(duration)}</span>
+        </div>
+
+        {/* Contrôles */}
+        <div className="player-controls player-controls--lg">
+          <button className="player-ctrl-btn" onClick={onPrev}>⏮</button>
+          <button className="player-ctrl-btn player-ctrl-btn--main" onClick={onToggle}>
+            {paused ? '▶' : '⏸'}
+          </button>
+          <button className="player-ctrl-btn" onClick={onNext}>⏭</button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Mini barre fixe en bas ─────────────────────────────────────────
+  return (
+    <div className="player-bar">
+      {/* Infos piste — clic pour agrandir */}
+      <div className="player-track" onClick={() => setExpanded(true)} style={{ cursor: 'pointer' }} title="Agrandir le player">
+        <img src={track.album.images[0]?.url} alt={track.name} className="player-cover" />
+        <div className="player-track-info">
+          <span className="player-track-name">{track.name}</span>
+          <span className="player-track-artist">{track.artists.map(a => a.name).join(', ')}</span>
+        </div>
+        <span className="player-expand-hint">⛶</span>
       </div>
 
-      {/* Contrôles */}
-      <div className="player-controls">
-        <button className="player-ctrl-btn" onClick={onPrev} title="Précédent">⏮</button>
-        <button className="player-ctrl-btn player-ctrl-btn--main" onClick={onToggle} title={paused ? 'Lecture' : 'Pause'}>
-          {paused ? '▶' : '⏸'}
+      <div className="player-fav-and-controls">
+        <button className={`player-fav-btn ${fav ? 'player-fav-btn--active' : ''}`} onClick={handleFav} title={fav ? 'Retirer' : 'Ajouter aux favoris'}>
+          {fav ? '❤️' : '🤍'}
         </button>
-        <button className="player-ctrl-btn" onClick={onNext} title="Suivant">⏭</button>
+        <div className="player-controls">
+          <button className="player-ctrl-btn" onClick={onPrev}>⏮</button>
+          <button className="player-ctrl-btn player-ctrl-btn--main" onClick={onToggle}>
+            {paused ? '▶' : '⏸'}
+          </button>
+          <button className="player-ctrl-btn" onClick={onNext}>⏭</button>
+        </div>
       </div>
 
       {/* Barre de progression */}
       <div className="player-progress">
         <span className="player-time">{formatTime(position)}</span>
-        <div className="player-progress-bar" onClick={handleProgressClick} title="Cliquer pour avancer">
+        <div className="player-progress-bar" onClick={handleProgressClick}>
           <div className="player-progress-fill" style={{ width: `${progress}%` }} />
         </div>
         <span className="player-time">{formatTime(duration)}</span>
