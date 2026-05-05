@@ -5,6 +5,7 @@ import { EMOTIONS } from '../constants/emotions'
 import { loginWithSpotify, getToken, logout, getPlaylistTracks } from '../services/spotify'
 import { useSpotifyPlayer } from '../hooks/useSpotifyPlayer'
 import { useEmotionStability } from '../hooks/useEmotionStability'
+import { useFavorites } from '../hooks/useFavorites'
 import './Result.css'
 
 function SpotifyIcon({ size = 24 }) {
@@ -25,6 +26,7 @@ function Result() {
   //   useEmotionStability filtre les émotions instables et expose reportEmotion()
   const { isReady, error: playerError, playPlaylist } = useSpotifyPlayer()
   const { stableEmotion, confidence, secondsLeft, reportEmotion } = useEmotionStability()
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites()
 
   const currentEmotion = stableEmotion ? EMOTIONS[stableEmotion] : null
 
@@ -112,7 +114,15 @@ function Result() {
       {tracks.length > 0 && (
         <div className="result-content">
           <h3 className="result-playlist-title">Titres de la playlist</h3>
-          <Playlist tracks={tracks} />
+          <Playlist
+            tracks={tracks}
+            onFavorite={track =>
+              isFavorite(track.id)
+                ? removeFavorite(track.id)
+                : addFavorite(track, stableEmotion)
+            }
+            isFavorite={isFavorite}
+          />
         </div>
       )}
     </main>
