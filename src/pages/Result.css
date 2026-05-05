@@ -50,44 +50,60 @@
 }
 
 .spotify-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   background: #1db954;
   color: #fff;
   border: none;
   border-radius: 24px;
-  padding: 12px 32px;
+  padding: 12px 28px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
 
 .spotify-btn:hover {
   background: #17a349;
+  transform: scale(1.03);
 }
 
 .spotify-status {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
   padding: 8px 24px;
-  font-size: 13px;
+}
+
+.spotify-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1db95420;
   color: #1db954;
+  border: 1px solid #1db95440;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .logout-btn {
   background: none;
-  border: 1px solid currentColor;
+  border: 1px solid #aaa;
   border-radius: 12px;
-  color: inherit;
-  padding: 2px 10px;
+  color: #aaa;
+  padding: 3px 10px;
   font-size: 12px;
   cursor: pointer;
-  opacity: 0.8;
+  transition: color 0.2s, border-color 0.2s;
 }
 
 .logout-btn:hover {
-  opacity: 1;
+  color: #fff;
+  border-color: #fff;
 }
 
 .result-loading {
