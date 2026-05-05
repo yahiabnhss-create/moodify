@@ -1,35 +1,38 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import { loadModels, detectEmotion } from '../../services/faceApi'
 import { normalizeEmotion } from '../../utils/emotionMapping'
 import './EmotionDetector.css'
 
 const CONFIDENCE_THRESHOLD = 0.5
 
-// 🎯 BUT : Affiche la caméra et détecte l'émotion au clic sur un bouton
-// @param onDetect {function({ emotion, confidence })} - appelée quand une émotion est trouvée
 function EmotionDetector({ onDetect }) {
   const videoRef = useRef(null)
+  const streamRef = useRef(null)
   const [ready, setReady] = useState(false)
   const [detecting, setDetecting] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    let stream
-    loadModels()
-
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then(s => {
-        stream = s
-        videoRef.current.srcObject = s
+  const startCamera = useCallback(async () => {
+    setError(null)
+    setReady(false)
+    try {
+      loadModels()
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
         videoRef.current.onloadedmetadata = () => setReady(true)
-      })
-      .catch(err => setError(err.message))
-
-    return () => stream?.getTracks().forEach(t => t.stop())
+      }
+    } catch (err) {
+      setError(err.message)
+    }
   }, [])
 
-  // 🎯 BUT : Déclenche UNE seule analyse à la demande de l'utilisateur
+  useEffect(() => {
+    startCamera()
+    return () => streamRef.current?.getTracks().forEach(t => t.stop())
+  }, [startCamera])
+
   async function handleDetect() {
     setDetecting(true)
     setError(null)
@@ -48,23 +51,27 @@ function EmotionDetector({ onDetect }) {
       return
     }
 
-    // On remonte l'émotion normalisée au composant parent
     onDetect({ emotion: normalizeEmotion(raw.emotion), confidence: raw.confidence })
     setDetecting(false)
   }
 
   if (error && !ready) {
-    return <p className="error">Caméra inaccessible : {error}</p>
+    return (
+      <div className="emotion-detector">
+        <p className="error">
+          Caméra inaccessible — autorise l'accès dans les paramètres du navigateur.
+        </p>
+        <button onClick={startCamera}>Réessayer</button>
+      </div>
+    )
   }
 
   return (
     <div className="emotion-detector">
       <video ref={videoRef} autoPlay muted playsInline className="camera-video" />
-
       <button onClick={handleDetect} disabled={!ready || detecting}>
         {detecting ? 'Analyse en cours...' : 'Détecter mon humeur'}
       </button>
-
       {error && ready && <p className="error">{error}</p>}
     </div>
   )

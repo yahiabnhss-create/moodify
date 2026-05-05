@@ -1,8 +1,8 @@
 import { useLocalStorage } from './useLocalStorage'
 
-// 🎯 BUT : Enregistre et lit l'historique des sessions de détection d'émotion
+//   BUT : Enregistre et lit l'historique des sessions de détection d'émotion
 //
-// 💡 CONCEPT : Les stats sont CALCULÉES depuis l'historique plutôt que stockées séparément
+//   CONCEPT : Les stats sont CALCULÉES depuis l'historique plutôt que stockées séparément
 //   Avantage : pas de risque de désynchronisation entre deux sources de vérité
 //   L'historique est la source unique → les stats en découlent toujours correctement
 //
@@ -11,7 +11,7 @@ import { useLocalStorage } from './useLocalStorage'
 export function useHistory() {
   const [history, setHistory] = useLocalStorage('moodify_history', [])
 
-  // 🎯 BUT : Enregistre une nouvelle session
+  // BUT : Enregistre une nouvelle session
   // @param emotion     {string} - émotion validée ex: "happy"
   // @param confidence  {number} - score entre 0 et 1
   // @param playlistId  {string} - id Spotify de la playlist jouée
@@ -25,20 +25,20 @@ export function useHistory() {
       playlistId,
       playlistName,
     }
-    // ⚠️ On ajoute en tête de liste (plus récent en premier)
+    // On ajoute en tête de liste (plus récent en premier)
     setHistory(prev => [session, ...prev])
   }
 
-  // 🎯 BUT : Supprime toutes les sessions de l'historique
+  // BUT : Supprime toutes les sessions de l'historique
   function clearHistory() {
     setHistory([])
   }
 
-  // 🎯 BUT : Calcule la répartition des émotions depuis l'historique
+  //  BUT : Calcule la répartition des émotions depuis l'historique
   // @param entries {array} - sous-ensemble de l'historique (filtré)
   // @returns {array} - [{ emotion, label, count, percent }]
   //
-  // 💡 CONCEPT : Array.reduce()
+  //  CONCEPT : Array.reduce()
   //   reduce() parcourt un tableau et accumule un résultat
   //   Ici on construit un objet { happy: 5, sad: 2, ... } depuis la liste des sessions
   function computeEmotionStats(entries) {
@@ -55,7 +55,7 @@ export function useHistory() {
     }))
   }
 
-  // 🎯 BUT : Filtre l'historique par période
+  //  BUT : Filtre l'historique par période
   // @param period {'day'|'week'|'month'|'all'}
   function filterByPeriod(period) {
     if (period === 'all') return history
