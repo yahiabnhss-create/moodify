@@ -26,6 +26,7 @@ function Result() {
   const [tracks, setTracks] = useState([])
   const [loadingTracks, setLoadingTracks] = useState(false)
   const [apiError, setApiError] = useState(null)
+  const [playError, setPlayError] = useState(null)
 
   const { isReady, error: playerError, needsReauth, playerState, playPlaylist, togglePlay, nextTrack, prevTrack, seekTo } = useSpotifyPlayer()
   const { addFavorite, removeFavorite, isFavorite } = useFavorites()
@@ -33,6 +34,7 @@ function Result() {
 
   const currentEmotion = detectedEmotion ? EMOTIONS[detectedEmotion] : null
   const moodClass = `mood-page mood-page--${detectedEmotion ?? 'idle'}`
+  const confidencePct = Math.round(detectedConfidence * 100)
 
   useEffect(() => {
     if (!isReady || !pendingPlayback) return
@@ -54,16 +56,14 @@ function Result() {
         setPendingPlayback(null)
       } catch (err) {
         if (!cancelled && pendingPlayback.requestId === detectRequestRef.current) {
-          setApiError(err.message)
+          setPlayError(err.message)
         }
       }
     }
 
     void playPending()
 
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [addSession, isReady, pendingPlayback, playPlaylist])
 
   const handleDetect = useCallback(async ({ emotion, confidence }) => {
@@ -75,6 +75,7 @@ function Result() {
     setPendingPlayback(null)
     setTracks([])
     setApiError(null)
+    setPlayError(null)
 
     const emotionData = EMOTIONS[emotion]
     if (!emotionData) {
@@ -95,7 +96,7 @@ function Result() {
         await playPlaylist(emotionData.playlistId)
         addSession(emotion, confidence, emotionData.playlistId, emotionData.label)
       } catch (err) {
-        setApiError(err.message)
+        setPlayError(err.message)
       }
     } else {
       setPendingPlayback(playback)
@@ -110,14 +111,13 @@ function Result() {
       if (detectRequestRef.current !== requestId) return
       setApiError(err.message)
     } finally {
-      if (detectRequestRef.current === requestId) {
-        setLoadingTracks(false)
-      }
+      if (detectRequestRef.current === requestId) setLoadingTracks(false)
     }
   }, [addSession, isReady, playPlaylist])
 
   const handleLogin = useCallback(async () => {
     setApiError(null)
+    setPlayError(null)
     try {
       await loginWithSpotify()
     } catch (err) {
@@ -134,6 +134,7 @@ function Result() {
     setPendingPlayback(null)
     setTracks([])
     setApiError(null)
+    setPlayError(null)
   }
 
   function handleChangeMood() {
@@ -143,19 +144,23 @@ function Result() {
     setPendingPlayback(null)
     setTracks([])
     setApiError(null)
+    setPlayError(null)
   }
 
+  /* ── Page connexion ── */
   if (!connected) {
     return (
       <main className="connect-page">
         <div className="spotify-connect">
-          <span className="studio-kicker">Moodify Studio</span>
+          <div className="connect-brand">
+            <span className="connect-dot" />
+            <span className="connect-label">Moodify</span>
+          </div>
           <h2>Ta playlist commence par une émotion.</h2>
-          <SpotifyIcon size={48} />
           <p>Connecte-toi à Spotify pour synchroniser la recommandation musicale.</p>
           {apiError && <p className="result-error">{apiError}</p>}
           <button className="spotify-btn" onClick={() => void handleLogin()}>
-            <SpotifyIcon size={20} />
+            <SpotifyIcon size={18} />
             Se connecter avec Spotify
           </button>
         </div>
@@ -163,61 +168,73 @@ function Result() {
     )
   }
 
+  /* ── Page principale ── */
   return (
     <main className={moodClass}>
       <section className="studio-shell">
+
+        {/* Topbar */}
         <div className="studio-topbar">
-          <div>
-            <span className="studio-kicker">Moodify Studio</span>
-            <h2>Un scan, une couleur, une playlist.</h2>
+          <div className="studio-title-block">
+            <span className="studio-kicker">Moodify</span>
+            <h2>{currentEmotion ? 'Émotion détectée.' : 'Analyse ta vibe.'}</h2>
           </div>
           <div className="spotify-status">
             <span className="spotify-badge">
-              <SpotifyIcon size={16} />
-              {isReady ? 'Player prêt' : 'Connexion player...'}
+              <SpotifyIcon size={14} />
+              {isReady ? 'Player prêt' : 'Connexion...'}
             </span>
             <button className="logout-btn" onClick={handleLogout}>Déconnecter</button>
           </div>
         </div>
 
+        {/* Banners */}
         {needsReauth && (
           <div className="reauth-banner">
-            <p>Tes droits Spotify ont changé. Reconnecte-toi.</p>
+            <p>Session Spotify expirée. Reconnecte-toi.</p>
             <button className="spotify-btn" onClick={() => { handleLogout(); void handleLogin() }}>
-              <SpotifyIcon size={18} /> Reconnecter Spotify
+              <SpotifyIcon size={16} /> Reconnecter
             </button>
           </div>
         )}
-        {playerError && !needsReauth && <p className="result-error">{playerError}</p>}
+        {playerError && !needsReauth && (
+          <p className="result-notice">{playerError}</p>
+        )}
+        {playError && (
+          <p className="result-notice">{playError}</p>
+        )}
         {apiError && <p className="result-error">{apiError}</p>}
 
+        {/* Grid caméra / info */}
         <div className="studio-grid">
+
+          {/* Colonne info */}
           <section className="studio-copy">
-            <span className="studio-index">01</span>
-            <h1>{currentEmotion ? currentEmotion.label : 'Quelle énergie tu envoies ?'}</h1>
-            <p>
-              {currentEmotion
-                ? `Mood ${currentEmotion.genre}, confiance ${Math.round(detectedConfidence * 100)}%.`
-                : 'Moodify transforme ton expression en sélection musicale.'}
-            </p>
-
-            <div className="mood-spectrum" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-
-            {currentEmotion && (
-              <div className="emotion-result">
-                <div className="emotion-result-badge">
-                  <span className="emotion-label">{currentEmotion.label}</span>
-                  <span className="emotion-genre">{currentEmotion.genre}</span>
-                  <span className="emotion-confidence">{Math.round(detectedConfidence * 100)}%</span>
+            {!currentEmotion ? (
+              <>
+                <p className="studio-hint">Pointe ta caméra vers ton visage et lance le scan.</p>
+              </>
+            ) : (
+              <div className="emotion-card">
+                <div className="emotion-card-header">
+                  <span className="emotion-card-name">{currentEmotion.label}</span>
+                  <span className="emotion-card-pct">{confidencePct}%</span>
                 </div>
-                {isReady && <p className="now-playing">Playlist lancée dans Spotify</p>}
-                {!isReady && <p className="now-playing">Player en cours d'initialisation...</p>}
+
+                <div className="emotion-card-bar-track">
+                  <div
+                    className="emotion-card-bar-fill"
+                    style={{ width: `${confidencePct}%` }}
+                  />
+                </div>
+
+                <div className="emotion-card-meta">
+                  <span className="emotion-card-genre">{currentEmotion.genre}</span>
+                  <span className="emotion-card-status">
+                    {isReady ? '● Playlist lancée' : '○ Player en attente'}
+                  </span>
+                </div>
+
                 <button className="change-mood-btn" onClick={handleChangeMood}>
                   Changer d'humeur
                 </button>
@@ -225,9 +242,10 @@ function Result() {
             )}
           </section>
 
+          {/* Colonne caméra */}
           <section className="camera-stage">
-            <div className="stage-ruler" aria-hidden="true">
-              <span>live</span>
+            <div className="stage-ruler">
+              <span className="stage-live"><span className="live-dot" />LIVE</span>
               <span>mood scan</span>
             </div>
             <EmotionDetector onDetect={handleDetect} />

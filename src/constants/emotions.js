@@ -21,7 +21,7 @@ export const EMOTIONS = {
   },
   neutral: {
     label: 'Neutre 😐',
-    genre: 'chill',
-    playlistId: '37i9dQZF1DX4WYpdgoIcn6',
+    genre: 'rap fr',
+    playlistId: '37i9dQZF1DX2A29LI7xHn1',
   },
 }

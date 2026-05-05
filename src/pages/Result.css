@@ -1,91 +1,44 @@
-/* ── Variables de mood par émotion ── */
+/* ── Variables de mood ── */
 .mood-page,
 .connect-page {
   --mood:      var(--accent);
-  --mood-soft: rgba(129, 140, 248, 0.12);
+  --mood-glow: rgba(129, 140, 248, 0.3);
   --mood-ink:  var(--accent);
-  --mood-glow: rgba(129, 140, 248, 0.35);
 }
 
-.mood-page--happy {
-  --mood:      #fbbf24;
-  --mood-soft: rgba(251, 191, 36, 0.1);
-  --mood-ink:  #fbbf24;
-  --mood-glow: rgba(251, 191, 36, 0.35);
-}
+.mood-page--happy    { --mood: #fbbf24; --mood-glow: rgba(251,191,36,0.28); --mood-ink: #fbbf24; }
+.mood-page--sad      { --mood: #60a5fa; --mood-glow: rgba(96,165,250,0.28); --mood-ink: #60a5fa; }
+.mood-page--angry    { --mood: #f87171; --mood-glow: rgba(248,113,113,0.28); --mood-ink: #f87171; }
+.mood-page--surprised{ --mood: #a78bfa; --mood-glow: rgba(167,139,250,0.28); --mood-ink: #a78bfa; }
+.mood-page--neutral  { --mood: #94a3b8; --mood-glow: rgba(148,163,184,0.2); --mood-ink: #94a3b8; }
 
-.mood-page--sad {
-  --mood:      #60a5fa;
-  --mood-soft: rgba(96, 165, 250, 0.1);
-  --mood-ink:  #60a5fa;
-  --mood-glow: rgba(96, 165, 250, 0.35);
-}
-
-.mood-page--angry {
-  --mood:      #f87171;
-  --mood-soft: rgba(248, 113, 113, 0.1);
-  --mood-ink:  #f87171;
-  --mood-glow: rgba(248, 113, 113, 0.35);
-}
-
-.mood-page--surprised {
-  --mood:      #a78bfa;
-  --mood-soft: rgba(167, 139, 250, 0.1);
-  --mood-ink:  #a78bfa;
-  --mood-glow: rgba(167, 139, 250, 0.35);
-}
-
-.mood-page--neutral {
-  --mood:      #94a3b8;
-  --mood-soft: rgba(148, 163, 184, 0.1);
-  --mood-ink:  #94a3b8;
-  --mood-glow: rgba(148, 163, 184, 0.25);
-}
-
-/* ── Shell principal ── */
+/* ── Shell ── */
 .studio-shell {
   width: min(1180px, 100%);
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding: clamp(18px, 3vw, 36px);
+  gap: 32px;
+  padding: clamp(20px, 3vw, 40px);
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(14, 14, 26, 0.72);
+  background: rgba(12, 12, 22, 0.75);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 30px 80px rgba(0, 0, 0, 0.6),
-    0 0 60px var(--mood-glow);
-  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.55);
   position: relative;
-  transition: box-shadow 0.6s ease;
+  overflow: hidden;
+  transition: box-shadow 0.5s ease;
 }
 
+/* Fin trait de couleur en haut du shell */
 .studio-shell::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--mood), transparent);
-  opacity: 0.6;
-}
-
-.studio-shell::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse 70% 50% at 80% 50%, var(--mood-soft), transparent);
-  opacity: 0.6;
-}
-
-.studio-shell > * {
-  position: relative;
-  z-index: 1;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 5%, var(--mood) 40%, transparent 95%);
+  opacity: 0.55;
+  transition: background 0.5s ease;
 }
 
 /* ── Topbar ── */
@@ -93,42 +46,46 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.studio-kicker,
-.studio-index {
+.studio-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.studio-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   color: var(--mood-ink);
   font-family: var(--font-display);
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  opacity: 0.9;
+  transition: color 0.5s ease;
 }
 
 .studio-kicker::before {
   content: '';
-  width: 22px;
+  width: 18px;
   height: 2px;
   background: var(--mood);
-  box-shadow: 0 0 8px var(--mood-glow);
   border-radius: 99px;
+  transition: background 0.5s ease;
 }
 
 .studio-topbar h2 {
-  margin-top: 8px;
-  max-width: 580px;
+  max-width: 540px;
 }
 
-/* ── Status Spotify ── */
+/* ── Spotify status ── */
 .spotify-status {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
 }
@@ -136,11 +93,11 @@
 .spotify-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid rgba(30, 215, 96, 0.22);
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid rgba(30,215,96,0.2);
   border-radius: 8px;
-  background: rgba(30, 215, 96, 0.08);
+  background: rgba(30,215,96,0.07);
   color: #4ade80;
   font-family: var(--font-display);
   font-size: 12px;
@@ -148,26 +105,25 @@
   letter-spacing: 0.04em;
 }
 
-.logout-btn,
-.change-mood-btn {
-  background: rgba(255, 255, 255, 0.05);
+.logout-btn {
+  background: rgba(255,255,255,0.05);
   border-color: var(--border-2);
-  color: rgba(210, 210, 235, 0.7);
+  color: rgba(210,210,235,0.6);
+  font-size: 13px;
 }
 
-.logout-btn:hover,
-.change-mood-btn:hover {
-  background: rgba(255, 255, 255, 0.09);
+.logout-btn:hover {
+  background: rgba(255,255,255,0.08);
   border-color: var(--border-2);
   box-shadow: none;
   color: var(--text-h);
 }
 
-/* ── Grid caméra / texte ── */
+/* ── Grid ── */
 .studio-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1.08fr);
-  gap: clamp(22px, 4vw, 48px);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 1fr);
+  gap: clamp(20px, 4vw, 52px);
   align-items: center;
 }
 
@@ -175,111 +131,138 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 22px;
+  gap: 24px;
 }
 
-.studio-copy h1 {
-  max-width: 600px;
-  line-height: 0.95;
-}
-
-.studio-copy p {
-  max-width: 480px;
+.studio-hint {
   font-size: clamp(15px, 2vw, 18px);
-  color: rgba(210, 210, 235, 0.6);
+  color: rgba(210,210,235,0.45);
+  max-width: 380px;
+  line-height: 1.6;
 }
 
-/* ── Spectre d'humeur animé ── */
-.mood-spectrum {
-  width: min(100%, 430px);
-  height: 66px;
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr 1fr 0.7fr 1.4fr;
-  gap: 6px;
-}
-
-.mood-spectrum span {
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
-  transform-origin: bottom;
-  animation: spectrum-rise 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-.mood-spectrum span:nth-child(1) { height: 48%; align-self: end; background: #fbbf24; box-shadow: 0 0 12px rgba(251, 191, 36, 0.5); }
-.mood-spectrum span:nth-child(2) { height: 82%; align-self: end; background: #a78bfa; box-shadow: 0 0 12px rgba(167, 139, 250, 0.5); animation-delay: 0.07s; }
-.mood-spectrum span:nth-child(3) { height: 60%; align-self: end; background: #f87171; box-shadow: 0 0 12px rgba(248, 113, 113, 0.5); animation-delay: 0.14s; }
-.mood-spectrum span:nth-child(4) { height: 94%; align-self: end; background: #60a5fa; box-shadow: 0 0 12px rgba(96, 165, 250, 0.5); animation-delay: 0.21s; }
-.mood-spectrum span:nth-child(5) { height: 70%; align-self: end; background: #818cf8; box-shadow: 0 0 12px rgba(129, 140, 248, 0.5); animation-delay: 0.28s; }
-
-/* ── Badge résultat émotion ── */
-.emotion-result {
-  width: min(100%, 430px);
+/* ── Emotion card (remplace l'ancien badge + mood-spectrum) ── */
+.emotion-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.07);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  box-shadow: 0 0 0 1px var(--mood) inset, 0 0 30px var(--mood-glow);
-  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.03);
+  max-width: 420px;
+  animation: card-in 0.35s cubic-bezier(0.22,1,0.36,1) both;
 }
 
-.emotion-result-badge {
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.emotion-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.emotion-card-name {
+  color: var(--text-h);
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.emotion-card-pct {
+  color: var(--mood-ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 16px var(--mood-glow);
+  transition: color 0.5s ease, text-shadow 0.5s ease;
+  flex-shrink: 0;
+}
+
+/* Barre de confiance */
+.emotion-card-bar-track {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.emotion-card-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--mood);
+  box-shadow: 0 0 10px var(--mood-glow);
+  transition: width 0.6s cubic-bezier(0.22,1,0.36,1), background 0.5s ease;
+}
+
+/* Meta (genre + status) */
+.emotion-card-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.emotion-label {
-  color: var(--text-h);
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  text-shadow: 0 0 20px var(--mood-glow);
-}
-
-.emotion-genre,
-.emotion-confidence {
-  padding: 5px 9px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--mood-ink);
+.emotion-card-genre {
+  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 99px;
+  background: rgba(255,255,255,0.05);
+  color: rgba(210,210,235,0.6);
   font-family: var(--font-display);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  text-shadow: 0 0 12px var(--mood-glow);
 }
 
-.now-playing {
+.emotion-card-status {
+  font-size: 12px;
+  color: rgba(210,210,235,0.45);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.change-mood-btn {
+  align-self: flex-start;
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border-2);
+  color: rgba(210,210,235,0.7);
   font-size: 13px;
-  color: rgba(210, 210, 235, 0.5);
-  letter-spacing: 0.02em;
+  padding: 8px 16px;
+  min-height: 36px;
+}
+
+.change-mood-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: var(--mood);
+  box-shadow: 0 0 14px var(--mood-glow);
+  color: var(--text-h);
 }
 
 /* ── Camera stage ── */
 .camera-stage {
   min-width: 0;
   padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
-  background: rgba(0, 0, 0, 0.5);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 30px 80px rgba(0, 0, 0, 0.6);
+  background: rgba(0,0,0,0.45);
 }
 
 .stage-ruler {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 0 4px 10px;
-  color: rgba(210, 210, 235, 0.3);
+  color: rgba(210,210,235,0.3);
   font-family: var(--font-display);
   font-size: 10px;
   font-weight: 700;
@@ -287,14 +270,35 @@
   text-transform: uppercase;
 }
 
-/* ── Page connexion Spotify ── */
+.stage-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4ade80;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74,222,128,0.8);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(74,222,128,0.6); opacity: 1; }
+  50%       { box-shadow: 0 0 12px rgba(74,222,128,0.9); opacity: 0.7; }
+}
+
+/* ── Page connexion ── */
 .connect-page {
   min-height: calc(100svh - 140px);
   justify-content: center;
 }
 
 .spotify-connect {
-  width: min(520px, 100%);
+  width: min(500px, 100%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -302,15 +306,39 @@
   padding: clamp(24px, 5vw, 44px);
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(14, 14, 26, 0.8);
+  background: rgba(12,12,22,0.8);
   backdrop-filter: blur(20px);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(129, 140, 248, 0.1);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+}
+
+.connect-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connect-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 10px var(--glow);
+}
+
+.connect-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(210,210,235,0.5);
 }
 
 .spotify-connect p {
-  max-width: 400px;
+  max-width: 380px;
   font-size: 16px;
-  color: rgba(210, 210, 235, 0.6);
+  color: rgba(210,210,235,0.55);
+  line-height: 1.6;
 }
 
 .spotify-btn {
@@ -321,24 +349,23 @@
   border: none;
   color: #fff;
   border-radius: var(--radius);
-  box-shadow: 0 0 20px rgba(29, 185, 84, 0.4);
+  box-shadow: 0 0 20px rgba(29,185,84,0.35);
 }
 
 .spotify-btn:hover {
   background: #1db954;
-  box-shadow: 0 0 35px rgba(29, 185, 84, 0.6), 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 36px rgba(29,185,84,0.6), 0 8px 24px rgba(0,0,0,0.4);
   transform: translateY(-2px);
+  color: #fff;
 }
 
-.spotify-btn::before {
-  display: none;
-}
+.spotify-btn::before { display: none; }
 
 /* ── Playlist section ── */
 .result-content {
   width: min(900px, 100%);
   align-items: stretch;
-  gap: 18px;
+  gap: 16px;
   padding: 0;
 }
 
@@ -349,74 +376,64 @@
   gap: 6px;
 }
 
-.result-playlist-title {
-  padding: 0;
-}
+.result-playlist-title { padding: 0; }
 
-/* ── États loading / erreur ── */
-.result-loading,
-.result-error {
+/* ── Messages ── */
+.result-loading {
   width: min(720px, 100%);
   padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   text-align: center;
   background: var(--surface);
-  color: rgba(210, 210, 235, 0.5);
+  color: rgba(210,210,235,0.45);
+  font-size: 14px;
 }
 
 .result-error {
+  padding: 12px 16px;
+  border: 1px solid rgba(248,113,113,0.22);
+  border-radius: var(--radius);
+  background: rgba(248,113,113,0.06);
   color: var(--danger);
-  border-color: rgba(248, 113, 113, 0.22);
-  background: rgba(248, 113, 113, 0.06);
+  font-size: 14px;
+}
+
+.result-notice {
+  padding: 10px 14px;
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: var(--radius);
+  background: rgba(251,191,36,0.05);
+  color: rgba(251,191,36,0.8);
+  font-size: 13px;
 }
 
 .reauth-banner {
-  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  border: 1px solid rgba(251, 191, 36, 0.28);
+  border: 1px solid rgba(251,191,36,0.22);
   border-radius: var(--radius);
-  background: rgba(251, 191, 36, 0.06);
+  background: rgba(251,191,36,0.05);
   color: #fbbf24;
 }
 
-/* ── Animations ── */
-@keyframes spectrum-rise {
-  from {
-    transform: scaleY(0.1);
-    opacity: 0;
-  }
-  to {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-}
-
 /* ── Responsive ── */
-@media (max-width: 880px) {
+@media (max-width: 860px) {
   .studio-grid {
     grid-template-columns: 1fr;
   }
-
   .studio-topbar {
     flex-direction: column;
   }
-
-  .spotify-status {
-    justify-content: flex-start;
+  .emotion-card {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 560px) {
-  .studio-shell {
-    padding: 14px;
-  }
-
-  .camera-stage {
-    padding: 9px;
-  }
+  .studio-shell { padding: 14px; }
+  .camera-stage { padding: 9px; }
 }

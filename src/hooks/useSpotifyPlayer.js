@@ -144,6 +144,10 @@ export function useSpotifyPlayer() {
       }
     )
 
+    if (playRes.status === 403) {
+      throw new Error('Lecture impossible — Spotify Premium requis pour la lecture en ligne.')
+    }
+
     if (!playRes.ok && playRes.status !== 204) {
       throw new Error(await readSpotifyError(playRes, `Lecture Spotify impossible (${playRes.status})`))
     }

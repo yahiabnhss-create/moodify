@@ -117,6 +117,10 @@ export async function getPlaylistTracks(emotion) {
     throw new Error('Session Spotify expirée, reconnecte-toi.')
   }
 
+  if (res.status === 403) {
+    throw new Error('Playlist inaccessible — essaie une autre émotion ou reconnecte-toi.')
+  }
+
   if (!res.ok) {
     throw new Error(await readSpotifyError(res, `Erreur Spotify (${res.status})`))
   }

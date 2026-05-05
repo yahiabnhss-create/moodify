@@ -18,8 +18,8 @@
   --shadow:         0 24px 80px rgba(0, 0, 0, 0.7);
   --shadow-soft:    0 8px 32px rgba(0, 0, 0, 0.5);
   --radius:         12px;
-  --font-display:   'Space Grotesk', 'Bahnschrift', sans-serif;
-  --font-body:      'Inter', 'Segoe UI', sans-serif;
+  --font-display:   'Space Grotesk', 'Bahnschrift', 'Apple Color Emoji', sans-serif;
+  --font-body:      'Inter', 'Segoe UI', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
 
   font: 16px/1.6 var(--font-body);
   color: var(--text);
