@@ -4,6 +4,7 @@ import Header from './components/Layout/Header'
 import Home from './pages/Home'
 import Result from './pages/Result'
 import Favorites from './pages/Favorites'
+import Dashboard from './pages/Dashboard'
 import Callback from './pages/Callback'
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/result" element={<Result />} />
         <Route path="/favorites" element={<Favorites />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/callback" element={<Callback />} />
       </Routes>
       <footer className="footer">made by Y9</footer>

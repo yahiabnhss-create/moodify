@@ -6,6 +6,7 @@ import { loginWithSpotify, getToken, logout, getPlaylistTracks } from '../servic
 import { useSpotifyPlayer } from '../hooks/useSpotifyPlayer'
 import { useEmotionStability } from '../hooks/useEmotionStability'
 import { useFavorites } from '../hooks/useFavorites'
+import { useHistory } from '../hooks/useHistory'
 import './Result.css'
 
 function SpotifyIcon({ size = 24 }) {
@@ -27,6 +28,7 @@ function Result() {
   const { isReady, error: playerError, playPlaylist } = useSpotifyPlayer()
   const { stableEmotion, confidence, secondsLeft, reportEmotion } = useEmotionStability()
   const { addFavorite, removeFavorite, isFavorite } = useFavorites()
+  const { addSession } = useHistory()
 
   const currentEmotion = stableEmotion ? EMOTIONS[stableEmotion] : null
 
@@ -42,6 +44,9 @@ function Result() {
 
     // Lance la playlist correspondante sur Spotify
     playPlaylist(emotion.playlistId)
+
+    // Enregistre la session dans l'historique
+    addSession(stableEmotion, confidence, emotion.playlistId, emotion.label)
 
     // Charge aussi la liste des pistes pour l'affichage
     setLoadingTracks(true)

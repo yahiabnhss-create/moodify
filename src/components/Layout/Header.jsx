@@ -9,6 +9,7 @@ function Header() {
         <NavLink to="/">Accueil</NavLink>
         <NavLink to="/result">Détecter</NavLink>
         <NavLink to="/favorites">Favoris</NavLink>
+        <NavLink to="/dashboard">Dashboard</NavLink>
       </nav>
     </header>
   )
