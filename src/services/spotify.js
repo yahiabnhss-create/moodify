@@ -34,7 +34,7 @@ export async function loginWithSpotify() {
       'user-read-private',
       'user-read-playback-state',
       'user-modify-playback-state',
-      'playlist-read-public',
+      'playlist-read-private',
       'playlist-read-collaborative',
     ].join(' '),
     code_challenge_method: 'S256',
