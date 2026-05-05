@@ -117,3 +117,83 @@
   padding: 16px;
   color: #e05;
 }
+
+/* Countdown de stabilité */
+.stability-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.countdown-bar {
+  width: 200px;
+  height: 4px;
+  background: var(--accent-bg, #e0e0e0);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.countdown-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #1db954;
+  /* Animation qui remplit la barre en 3s */
+  animation: fill-bar 3s linear forwards;
+}
+
+@keyframes fill-bar {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); transform-origin: left; }
+}
+
+/* Émotion validée */
+.emotion-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+}
+
+.emotion-result-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.emotion-label {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.emotion-genre {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.emotion-confidence {
+  font-size: 13px;
+  color: #1db954;
+  font-weight: 500;
+}
+
+.now-playing {
+  font-size: 14px;
+  opacity: 0.7;
+}

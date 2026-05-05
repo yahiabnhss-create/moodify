@@ -1,4 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import EmotionDetector from '../components/EmotionDetector/EmotionDetector'
+import Playlist from '../components/Playlist/Playlist'
+import { EMOTIONS } from '../constants/emotions'
+import { loginWithSpotify, getToken, logout, getPlaylistTracks } from '../services/spotify'
+import { useSpotifyPlayer } from '../hooks/useSpotifyPlayer'
+import { useEmotionStability } from '../hooks/useEmotionStability'
+import './Result.css'
 
 function SpotifyIcon({ size = 24 }) {
   return (
@@ -7,47 +14,51 @@ function SpotifyIcon({ size = 24 }) {
     </svg>
   )
 }
-import EmotionDetector from '../components/EmotionDetector/EmotionDetector'
-import Playlist from '../components/Playlist/Playlist'
-import { EMOTIONS } from '../constants/emotions'
-import { loginWithSpotify, getToken, logout, getPlaylistTracks } from '../services/spotify'
-import './Result.css'
 
 function Result() {
-  const [detectedEmotion, setDetectedEmotion] = useState(null)
-  const [tracks, setTracks] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [connected, setConnected] = useState(!!getToken())
+  const [tracks, setTracks] = useState([])
+  const [loadingTracks, setLoadingTracks] = useState(false)
 
-  const emotion = detectedEmotion ? EMOTIONS[detectedEmotion] : null
+  // 💡 CONCEPT : On utilise nos deux custom hooks
+  //   useSpotifyPlayer gère le SDK et expose playPlaylist()
+  //   useEmotionStability filtre les émotions instables et expose reportEmotion()
+  const { isReady, error: playerError, playPlaylist } = useSpotifyPlayer()
+  const { stableEmotion, confidence, secondsLeft, reportEmotion } = useEmotionStability()
 
-  async function handleEmotionDetected(emotionKey) {
-    setDetectedEmotion(emotionKey)
-    setLoading(true)
-    setError(null)
-    setTracks([])
-    try {
-      const results = await getPlaylistTracks(EMOTIONS[emotionKey])
-      setTracks(results)
-    } catch (e) {
-      setError(e.message)
-      if (e.message.includes('reconnecte')) setConnected(false)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const currentEmotion = stableEmotion ? EMOTIONS[stableEmotion] : null
+
+  // 🎯 BUT : Réagir quand une émotion stable est validée
+  // 💡 CONCEPT : useEffect avec dépendance [stableEmotion]
+  //   Ce bloc s'exécute UNIQUEMENT quand stableEmotion change
+  //   → c'est le point de déclenchement de l'auto-play
+  useEffect(() => {
+    if (!stableEmotion || !isReady) return
+
+    const emotion = EMOTIONS[stableEmotion]
+    if (!emotion) return
+
+    // Lance la playlist correspondante sur Spotify
+    playPlaylist(emotion.playlistId)
+
+    // Charge aussi la liste des pistes pour l'affichage
+    setLoadingTracks(true)
+    getPlaylistTracks(emotion)
+      .then(setTracks)
+      .catch(() => setTracks([]))
+      .finally(() => setLoadingTracks(false))
+  }, [stableEmotion]) // ⚠️ On ne met pas isReady ici pour éviter des double-déclenchements
 
   function handleLogout() {
     logout()
     setConnected(false)
-    setDetectedEmotion(null)
     setTracks([])
   }
 
-  return (
-    <main>
-      {!connected ? (
+  // ─── Pas connecté à Spotify ───────────────────────────────────────
+  if (!connected) {
+    return (
+      <main>
         <div className="spotify-connect">
           <SpotifyIcon size={48} />
           <p>Connecte-toi à Spotify pour obtenir ta playlist</p>
@@ -56,29 +67,51 @@ function Result() {
             Se connecter avec Spotify
           </button>
         </div>
-      ) : (
-        <>
-          <div className="spotify-status">
-            <span className="spotify-badge">
-              <SpotifyIcon size={16} />
-              Connecté
-            </span>
-            <button className="logout-btn" onClick={handleLogout}>Déconnecter</button>
-          </div>
-          <EmotionDetector onDetect={handleEmotionDetected} />
-        </>
+      </main>
+    )
+  }
+
+  return (
+    <main>
+      {/* Barre de statut Spotify */}
+      <div className="spotify-status">
+        <span className="spotify-badge">
+          <SpotifyIcon size={16} />
+          {isReady ? 'Player prêt' : 'Connexion player...'}
+        </span>
+        <button className="logout-btn" onClick={handleLogout}>Déconnecter</button>
+      </div>
+
+      {playerError && <p className="result-error">{playerError}</p>}
+
+      {/* Détecteur d'émotion — passe reportEmotion comme callback */}
+      <EmotionDetector onDetect={({ emotion, confidence }) => reportEmotion(emotion, confidence)} />
+
+      {/* Countdown de stabilité */}
+      {secondsLeft > 0 && (
+        <div className="stability-countdown">
+          <div className="countdown-bar" style={{ '--seconds': secondsLeft }} />
+          <p>Stabilisation en cours… <strong>{secondsLeft}s</strong></p>
+        </div>
       )}
 
-      {loading && <p className="result-loading">Chargement de ta playlist...</p>}
-      {error && <p className="result-error">{error}</p>}
-
-      {emotion && tracks.length > 0 && (
-        <div className="result-content">
-          <div className="result-emotion">
-            <span className="result-emotion-label">{emotion.label}</span>
-            <span className="result-emotion-genre">{emotion.genre}</span>
+      {/* Émotion validée */}
+      {currentEmotion && (
+        <div className="emotion-result">
+          <div className="emotion-result-badge">
+            <span className="emotion-label">{currentEmotion.label}</span>
+            <span className="emotion-genre">{currentEmotion.genre}</span>
+            <span className="emotion-confidence">{Math.round(confidence * 100)}% de confiance</span>
           </div>
-          <h3 className="result-playlist-title">Ta playlist</h3>
+          <p className="now-playing">🎵 Playlist en cours de lecture dans Spotify</p>
+        </div>
+      )}
+
+      {/* Liste des pistes */}
+      {loadingTracks && <p className="result-loading">Chargement des titres...</p>}
+      {tracks.length > 0 && (
+        <div className="result-content">
+          <h3 className="result-playlist-title">Titres de la playlist</h3>
           <Playlist tracks={tracks} />
         </div>
       )}
