@@ -3,54 +3,91 @@
   flex-direction: column;
   align-items: stretch;
   gap: 12px;
+  position: relative;
 }
 
+/* ── Vidéo caméra ── */
 .camera-video {
   width: 100%;
   aspect-ratio: 4 / 3;
-  border: 1px solid rgba(255, 255, 252, 0.12);
-  border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   display: block;
   object-fit: cover;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 252, 0.06), transparent),
-    #050704;
+  background: #020205;
+  position: relative;
 }
 
+/* Coin scanner façon uiverse.io */
+.emotion-detector::before,
+.emotion-detector::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  z-index: 2;
+  pointer-events: none;
+  border-color: var(--mood, var(--accent));
+  border-style: solid;
+  opacity: 0.7;
+}
+
+.emotion-detector::before {
+  top: 0;
+  left: 0;
+  border-width: 2px 0 0 2px;
+  border-radius: 4px 0 0 0;
+}
+
+.emotion-detector::after {
+  bottom: calc(12px + 1px);
+  right: 0;
+  border-width: 0 2px 2px 0;
+  border-radius: 0 0 4px 0;
+}
+
+/* ── Bouton scan ── */
 .emotion-detector button {
   width: 100%;
-  background: #fffffb;
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-h);
+  border-color: var(--border-2);
 }
 
 .emotion-detector button:hover {
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--mood, var(--accent));
+  box-shadow: 0 0 18px var(--mood-glow, var(--glow)), 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: var(--text-h);
 }
 
 .emotion-detector button:disabled {
-  opacity: 0.62;
-  cursor: not-allowed;
+  opacity: 0.4;
 }
 
 .secondary-btn {
-  background: rgba(255, 255, 252, 0.1) !important;
-  border-color: rgba(255, 255, 252, 0.2);
-  color: #fffffb !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(210, 210, 235, 0.6) !important;
 }
 
+/* ── Barre countdown / stabilité ── */
 .stability-countdown {
   display: grid;
   gap: 8px;
   padding: 10px 2px 2px;
-  color: rgba(255, 255, 252, 0.72);
-  font-size: 13px;
+  color: rgba(210, 210, 235, 0.6);
+  font-size: 12px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 .countdown-bar {
-  height: 5px;
+  height: 3px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255, 255, 252, 0.13);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .countdown-bar::after {
@@ -58,21 +95,24 @@
   width: 100%;
   height: 100%;
   display: block;
-  background: linear-gradient(90deg, var(--mood, var(--accent)), #fffffb);
+  background: linear-gradient(90deg, var(--mood, var(--accent)), var(--accent-2));
+  box-shadow: 0 0 8px var(--mood-glow, var(--glow));
   transform-origin: left;
   animation: fill-bar 3s linear forwards;
 }
 
+/* ── Erreur ── */
 .error {
   padding: 12px;
-  border: 1px solid rgba(240, 79, 66, 0.34);
-  border-radius: var(--radius);
-  background: rgba(240, 79, 66, 0.12);
-  color: #ffd9d6;
-  font-size: 14px;
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  border-radius: 10px;
+  background: rgba(248, 113, 113, 0.08);
+  color: rgba(255, 180, 180, 0.9);
+  font-size: 13px;
 }
 
+/* ── Animation ── */
 @keyframes fill-bar {
   from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+  to   { transform: scaleX(1); }
 }

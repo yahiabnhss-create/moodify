@@ -2,7 +2,7 @@
   width: min(920px, 100%);
   align-self: center;
   align-items: stretch;
-  gap: 22px;
+  gap: 20px;
 }
 
 .favorites-header {
@@ -10,42 +10,62 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 22px;
+  padding: 20px 22px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
+  border-radius: 16px;
+  background: rgba(14, 14, 26, 0.6);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .favorites-header h2 {
   flex: 1;
+  background: linear-gradient(90deg, var(--text-h) 60%, var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .favorites-count {
   margin-left: 8px;
   color: var(--accent);
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  text-shadow: 0 0 16px var(--glow);
 }
 
 .favorites-empty {
-  padding: 40px 24px;
+  padding: 44px 24px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 16px;
   background: var(--surface);
   text-align: center;
-  color: rgba(18, 23, 16, 0.58);
+  color: rgba(210, 210, 235, 0.38);
+  font-size: 14px;
 }
 
+/* ── Boutons clear ── */
 .favorites-clear-btn,
 .favorites-confirm-yes,
 .favorites-confirm-no {
-  min-height: 36px;
-  padding: 7px 12px;
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .favorites-clear-btn {
-  background: rgba(207, 48, 68, 0.08);
-  border-color: rgba(207, 48, 68, 0.26);
+  background: rgba(248, 113, 113, 0.07);
+  border-color: rgba(248, 113, 113, 0.22);
+  color: var(--danger);
+}
+
+.favorites-clear-btn::before { display: none; }
+
+.favorites-clear-btn:hover {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.4);
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.2);
   color: var(--danger);
 }
 
@@ -53,45 +73,73 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12px;
+  color: rgba(210, 210, 235, 0.55);
 }
 
 .favorites-confirm-yes {
   background: var(--danger);
+  border: none;
   color: #fff;
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.3);
 }
 
+.favorites-confirm-yes::before { display: none; }
+
 .favorites-confirm-no {
-  background: rgba(255, 255, 252, 0.68);
-  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-2);
   color: var(--text-h);
 }
 
+.favorites-confirm-no::before { display: none; }
+
+/* ── Filtres par émotion ── */
 .favorites-filters {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .favorites-filter-chip {
-  min-height: 34px;
-  padding: 6px 12px;
-  border: 1px solid var(--accent-border);
-  border-radius: 7px;
+  min-height: 32px;
+  padding: 5px 13px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: var(--surface);
+  color: rgba(210, 210, 235, 0.52);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all 0.18s ease;
+}
+
+.favorites-filter-chip::before { display: none; }
+
+.favorites-filter-chip:hover {
+  border-color: var(--accent-border);
+  color: var(--text-h);
   background: var(--accent-bg);
-  color: var(--accent);
-  font-size: 13px;
+  box-shadow: none;
+  transform: none;
 }
 
 .favorites-filter-chip--active {
-  background: var(--text-h);
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  border-color: transparent;
   color: #fff;
-  border-color: var(--text-h);
+  box-shadow: 0 0 14px var(--glow-2), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
+.favorites-filter-chip--active:hover {
+  transform: none;
+}
+
+/* ── Liste ── */
 .favorites-list {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .favorite-item {
@@ -102,15 +150,20 @@
 .favorite-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding-inline: 2px;
-  color: rgba(18, 23, 16, 0.58);
+  color: rgba(210, 210, 235, 0.4);
   font-size: 12px;
 }
 
 .favorite-emotion {
-  color: var(--accent);
-  font-weight: 800;
+  color: var(--accent-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px var(--glow-2);
 }
 
 @media (max-width: 620px) {

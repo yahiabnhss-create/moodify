@@ -1,31 +1,30 @@
 :root {
-  --bg: #f6f8f2;
-  --surface: rgba(255, 255, 252, 0.82);
-  --surface-strong: #fffffb;
-  --text: #5d665f;
-  --text-h: #121710;
-  --border: rgba(24, 35, 24, 0.12);
-  --accent: #0e8f82;
-  --accent-2: #f04f42;
-  --accent-3: #e8c43d;
-  --accent-bg: rgba(14, 143, 130, 0.1);
-  --accent-border: rgba(14, 143, 130, 0.32);
-  --danger: #cf3044;
-  --shadow: 0 24px 70px rgba(21, 29, 18, 0.14);
-  --shadow-soft: 0 14px 34px rgba(21, 29, 18, 0.1);
-  --radius: 8px;
-  --font-display: "Bahnschrift", "Aptos Display", "Trebuchet MS", sans-serif;
-  --font-body: "Aptos", "Segoe UI", sans-serif;
+  --bg:             #080810;
+  --bg-2:           #0e0e1a;
+  --surface:        rgba(255, 255, 255, 0.04);
+  --surface-2:      rgba(255, 255, 255, 0.07);
+  --border:         rgba(255, 255, 255, 0.08);
+  --border-2:       rgba(255, 255, 255, 0.16);
+  --text:           rgba(210, 210, 235, 0.68);
+  --text-h:         #e8e8fa;
+  --accent:         #818cf8;
+  --accent-2:       #f472b6;
+  --accent-3:       #fbbf24;
+  --accent-bg:      rgba(129, 140, 248, 0.1);
+  --accent-border:  rgba(129, 140, 248, 0.28);
+  --glow:           rgba(129, 140, 248, 0.45);
+  --glow-2:         rgba(244, 114, 182, 0.35);
+  --danger:         #f87171;
+  --shadow:         0 24px 80px rgba(0, 0, 0, 0.7);
+  --shadow-soft:    0 8px 32px rgba(0, 0, 0, 0.5);
+  --radius:         12px;
+  --font-display:   'Space Grotesk', 'Bahnschrift', sans-serif;
+  --font-body:      'Inter', 'Segoe UI', sans-serif;
 
-  font: 16px/1.5 var(--font-body);
+  font: 16px/1.6 var(--font-body);
   color: var(--text);
-  background:
-    linear-gradient(115deg, rgba(14, 143, 130, 0.13), transparent 32%),
-    linear-gradient(250deg, rgba(240, 79, 66, 0.12), transparent 38%),
-    repeating-linear-gradient(90deg, rgba(18, 23, 16, 0.035) 0 1px, transparent 1px 74px),
-    repeating-linear-gradient(0deg, rgba(18, 23, 16, 0.03) 0 1px, transparent 1px 74px),
-    var(--bg);
-  color-scheme: light;
+  background: var(--bg);
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
 }
@@ -43,6 +42,10 @@ body {
   min-width: 320px;
   min-height: 100svh;
   margin: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(129, 140, 248, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(244, 114, 182, 0.1), transparent),
+    var(--bg);
 }
 
 #root {
@@ -51,28 +54,27 @@ body {
   flex-direction: column;
 }
 
-h1,
-h2,
-h3 {
+h1, h2, h3 {
   color: var(--text-h);
   font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
 h1 {
-  font-size: clamp(42px, 7vw, 86px);
-  line-height: 0.9;
+  font-size: clamp(38px, 7vw, 80px);
+  line-height: 0.92;
+  font-weight: 800;
 }
 
 h2 {
-  font-size: clamp(24px, 3vw, 40px);
+  font-size: clamp(22px, 3vw, 36px);
   line-height: 1;
 }
 
 h3 {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.1;
 }
 
@@ -82,9 +84,37 @@ p {
 
 a {
   color: var(--accent);
+  text-decoration: none;
+  transition: color 0.18s;
 }
 
-img,
-video {
+a:hover {
+  color: var(--accent-2);
+}
+
+img, video {
   max-width: 100%;
+}
+
+::selection {
+  background: rgba(129, 140, 248, 0.28);
+  color: var(--text-h);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
 }

@@ -1,71 +1,94 @@
+/* ── Variables de mood par émotion ── */
 .mood-page,
 .connect-page {
-  --mood: var(--accent);
-  --mood-soft: rgba(14, 143, 130, 0.14);
-  --mood-ink: #0c5b55;
+  --mood:      var(--accent);
+  --mood-soft: rgba(129, 140, 248, 0.12);
+  --mood-ink:  var(--accent);
+  --mood-glow: rgba(129, 140, 248, 0.35);
 }
 
 .mood-page--happy {
-  --mood: #e8c43d;
-  --mood-soft: rgba(232, 196, 61, 0.24);
-  --mood-ink: #765e00;
+  --mood:      #fbbf24;
+  --mood-soft: rgba(251, 191, 36, 0.1);
+  --mood-ink:  #fbbf24;
+  --mood-glow: rgba(251, 191, 36, 0.35);
 }
 
 .mood-page--sad {
-  --mood: #4a8edb;
-  --mood-soft: rgba(74, 142, 219, 0.18);
-  --mood-ink: #1d4f82;
+  --mood:      #60a5fa;
+  --mood-soft: rgba(96, 165, 250, 0.1);
+  --mood-ink:  #60a5fa;
+  --mood-glow: rgba(96, 165, 250, 0.35);
 }
 
 .mood-page--angry {
-  --mood: #f04f42;
-  --mood-soft: rgba(240, 79, 66, 0.18);
-  --mood-ink: #8a211a;
+  --mood:      #f87171;
+  --mood-soft: rgba(248, 113, 113, 0.1);
+  --mood-ink:  #f87171;
+  --mood-glow: rgba(248, 113, 113, 0.35);
 }
 
 .mood-page--surprised {
-  --mood: #20b8a5;
-  --mood-soft: rgba(32, 184, 165, 0.18);
-  --mood-ink: #0f6b61;
+  --mood:      #a78bfa;
+  --mood-soft: rgba(167, 139, 250, 0.1);
+  --mood-ink:  #a78bfa;
+  --mood-glow: rgba(167, 139, 250, 0.35);
 }
 
 .mood-page--neutral {
-  --mood: #819074;
-  --mood-soft: rgba(129, 144, 116, 0.2);
-  --mood-ink: #4e5a45;
+  --mood:      #94a3b8;
+  --mood-soft: rgba(148, 163, 184, 0.1);
+  --mood-ink:  #94a3b8;
+  --mood-glow: rgba(148, 163, 184, 0.25);
 }
 
+/* ── Shell principal ── */
 .studio-shell {
   width: min(1180px, 100%);
   display: flex;
   flex-direction: column;
   gap: 28px;
-  padding: clamp(18px, 3vw, 34px);
+  padding: clamp(18px, 3vw, 36px);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 252, 0.9), rgba(255, 255, 252, 0.62)),
-    linear-gradient(90deg, var(--mood-soft), transparent 54%);
-  box-shadow: var(--shadow);
+  border-radius: 18px;
+  background: rgba(14, 14, 26, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 0 60px var(--mood-glow);
   overflow: hidden;
   position: relative;
+  transition: box-shadow 0.6s ease;
 }
 
 .studio-shell::before {
   content: '';
   position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mood), transparent);
+  opacity: 0.6;
+}
+
+.studio-shell::after {
+  content: '';
+  position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    repeating-linear-gradient(90deg, rgba(18, 23, 16, 0.06) 0 1px, transparent 1px 96px),
-    linear-gradient(90deg, transparent, rgba(255, 255, 252, 0.62));
-  opacity: 0.45;
+  background: radial-gradient(ellipse 70% 50% at 80% 50%, var(--mood-soft), transparent);
+  opacity: 0.6;
 }
 
 .studio-shell > * {
   position: relative;
+  z-index: 1;
 }
 
+/* ── Topbar ── */
 .studio-topbar {
   display: flex;
   align-items: flex-start;
@@ -80,16 +103,20 @@
   gap: 8px;
   color: var(--mood-ink);
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  opacity: 0.9;
 }
 
 .studio-kicker::before {
   content: '';
-  width: 26px;
+  width: 22px;
   height: 2px;
   background: var(--mood);
+  box-shadow: 0 0 8px var(--mood-glow);
+  border-radius: 99px;
 }
 
 .studio-topbar h2 {
@@ -97,6 +124,7 @@
   max-width: 580px;
 }
 
+/* ── Status Spotify ── */
 .spotify-status {
   display: flex;
   align-items: center;
@@ -109,25 +137,36 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 12px;
-  border: 1px solid rgba(29, 185, 84, 0.28);
-  border-radius: var(--radius);
-  background: rgba(29, 185, 84, 0.1);
-  color: #117c3d;
-  font-size: 13px;
-  font-weight: 800;
+  padding: 8px 12px;
+  border: 1px solid rgba(30, 215, 96, 0.22);
+  border-radius: 8px;
+  background: rgba(30, 215, 96, 0.08);
+  color: #4ade80;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .logout-btn,
 .change-mood-btn {
-  background: rgba(255, 255, 252, 0.7);
-  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-2);
+  color: rgba(210, 210, 235, 0.7);
+}
+
+.logout-btn:hover,
+.change-mood-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--border-2);
+  box-shadow: none;
   color: var(--text-h);
 }
 
+/* ── Grid caméra / texte ── */
 .studio-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(340px, 1.08fr);
+  grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1.08fr);
   gap: clamp(22px, 4vw, 48px);
   align-items: center;
 }
@@ -137,71 +176,54 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 20px;
+  gap: 22px;
 }
 
 .studio-copy h1 {
-  max-width: 620px;
+  max-width: 600px;
+  line-height: 0.95;
 }
 
 .studio-copy p {
-  max-width: 520px;
-  font-size: clamp(17px, 2vw, 22px);
-  color: rgba(18, 23, 16, 0.68);
+  max-width: 480px;
+  font-size: clamp(15px, 2vw, 18px);
+  color: rgba(210, 210, 235, 0.6);
 }
 
+/* ── Spectre d'humeur animé ── */
 .mood-spectrum {
-  width: min(100%, 470px);
-  height: 74px;
+  width: min(100%, 430px);
+  height: 66px;
   display: grid;
   grid-template-columns: 1.2fr 0.8fr 1fr 0.7fr 1.4fr;
-  gap: 8px;
+  gap: 6px;
 }
 
 .mood-spectrum span {
-  border: 1px solid rgba(18, 23, 16, 0.14);
-  border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
   transform-origin: bottom;
-  animation: spectrum-rise 0.75s ease both;
+  animation: spectrum-rise 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-.mood-spectrum span:nth-child(1) { height: 48%; align-self: end; background: #e8c43d; }
-.mood-spectrum span:nth-child(2) { height: 82%; align-self: end; background: #20b8a5; animation-delay: 0.06s; }
-.mood-spectrum span:nth-child(3) { height: 62%; align-self: end; background: #f04f42; animation-delay: 0.12s; }
-.mood-spectrum span:nth-child(4) { height: 96%; align-self: end; background: #4a8edb; animation-delay: 0.18s; }
-.mood-spectrum span:nth-child(5) { height: 72%; align-self: end; background: #111711; animation-delay: 0.24s; }
+.mood-spectrum span:nth-child(1) { height: 48%; align-self: end; background: #fbbf24; box-shadow: 0 0 12px rgba(251, 191, 36, 0.5); }
+.mood-spectrum span:nth-child(2) { height: 82%; align-self: end; background: #a78bfa; box-shadow: 0 0 12px rgba(167, 139, 250, 0.5); animation-delay: 0.07s; }
+.mood-spectrum span:nth-child(3) { height: 60%; align-self: end; background: #f87171; box-shadow: 0 0 12px rgba(248, 113, 113, 0.5); animation-delay: 0.14s; }
+.mood-spectrum span:nth-child(4) { height: 94%; align-self: end; background: #60a5fa; box-shadow: 0 0 12px rgba(96, 165, 250, 0.5); animation-delay: 0.21s; }
+.mood-spectrum span:nth-child(5) { height: 70%; align-self: end; background: #818cf8; box-shadow: 0 0 12px rgba(129, 140, 248, 0.5); animation-delay: 0.28s; }
 
-.camera-stage {
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid rgba(18, 23, 16, 0.16);
-  border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, rgba(18, 23, 16, 0.94), rgba(18, 23, 16, 0.86)),
-    var(--text-h);
-  box-shadow: 0 34px 90px rgba(18, 23, 16, 0.32);
-}
-
-.stage-ruler {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 4px 10px;
-  color: rgba(255, 255, 252, 0.58);
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
+/* ── Badge résultat émotion ── */
 .emotion-result {
-  width: min(100%, 460px);
+  width: min(100%, 430px);
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 18px;
-  border: 1px solid rgba(18, 23, 16, 0.12);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 252, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 0 1px var(--mood) inset, 0 0 30px var(--mood-glow);
+  backdrop-filter: blur(10px);
 }
 
 .emotion-result-badge {
@@ -214,48 +236,81 @@
 .emotion-label {
   color: var(--text-h);
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px var(--mood-glow);
 }
 
 .emotion-genre,
 .emotion-confidence {
-  padding: 6px 9px;
-  border: 1px solid var(--accent-border);
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 7px;
-  background: var(--mood-soft);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--mood-ink);
-  font-size: 12px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  text-shadow: 0 0 12px var(--mood-glow);
 }
 
 .now-playing {
-  font-size: 14px;
-  color: rgba(18, 23, 16, 0.6);
+  font-size: 13px;
+  color: rgba(210, 210, 235, 0.5);
+  letter-spacing: 0.02em;
 }
 
+/* ── Camera stage ── */
+.camera-stage {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.stage-ruler {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px 10px;
+  color: rgba(210, 210, 235, 0.3);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ── Page connexion Spotify ── */
 .connect-page {
   min-height: calc(100svh - 140px);
   justify-content: center;
 }
 
 .spotify-connect {
-  width: min(560px, 100%);
+  width: min(520px, 100%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 18px;
+  gap: 20px;
   padding: clamp(24px, 5vw, 44px);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  border-radius: 18px;
+  background: rgba(14, 14, 26, 0.8);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(129, 140, 248, 0.1);
 }
 
 .spotify-connect p {
-  max-width: 420px;
-  font-size: 17px;
+  max-width: 400px;
+  font-size: 16px;
+  color: rgba(210, 210, 235, 0.6);
 }
 
 .spotify-btn {
@@ -263,13 +318,23 @@
   align-items: center;
   gap: 10px;
   background: #1db954;
+  border: none;
   color: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 0 20px rgba(29, 185, 84, 0.4);
 }
 
 .spotify-btn:hover {
-  background: #18a64b;
+  background: #1db954;
+  box-shadow: 0 0 35px rgba(29, 185, 84, 0.6), 0 8px 24px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
 }
 
+.spotify-btn::before {
+  display: none;
+}
+
+/* ── Playlist section ── */
 .result-content {
   width: min(900px, 100%);
   align-items: stretch;
@@ -281,13 +346,14 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 6px;
 }
 
 .result-playlist-title {
   padding: 0;
 }
 
+/* ── États loading / erreur ── */
 .result-loading,
 .result-error {
   width: min(720px, 100%);
@@ -295,13 +361,14 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   text-align: center;
-  background: rgba(255, 255, 252, 0.68);
+  background: var(--surface);
+  color: rgba(210, 210, 235, 0.5);
 }
 
 .result-error {
   color: var(--danger);
-  border-color: rgba(207, 48, 68, 0.24);
-  background: rgba(207, 48, 68, 0.08);
+  border-color: rgba(248, 113, 113, 0.22);
+  background: rgba(248, 113, 113, 0.06);
 }
 
 .reauth-banner {
@@ -311,15 +378,16 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  border: 1px solid rgba(232, 196, 61, 0.42);
+  border: 1px solid rgba(251, 191, 36, 0.28);
   border-radius: var(--radius);
-  background: rgba(232, 196, 61, 0.18);
-  color: #5d4c08;
+  background: rgba(251, 191, 36, 0.06);
+  color: #fbbf24;
 }
 
+/* ── Animations ── */
 @keyframes spectrum-rise {
   from {
-    transform: scaleY(0.2);
+    transform: scaleY(0.1);
     opacity: 0;
   }
   to {
@@ -328,6 +396,7 @@
   }
 }
 
+/* ── Responsive ── */
 @media (max-width: 880px) {
   .studio-grid {
     grid-template-columns: 1fr;
