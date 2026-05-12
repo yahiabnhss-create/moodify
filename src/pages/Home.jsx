@@ -1,12 +1,13 @@
 import { useNavigate } from 'react-router-dom'
-import bgVideo from '../video/142032-779071806.mp4'
+
+const BG_VIDEO = 'https://res.cloudinary.com/detzrcs5y/video/upload/q_auto/v1778596857/142032-779071806_ttlbf7.mp4'
 
 function Home() {
   const navigate = useNavigate()
 
   return (
     <main className="home-page">
-      <video className="home-bg-video" src={bgVideo} autoPlay muted loop playsInline />
+      <video className="home-bg-video" src={BG_VIDEO} autoPlay muted loop playsInline />
       <div className="home-bg-overlay" />
       <div className="home-content">
         <h2>Comment tu te sens aujourd'hui ?</h2>
