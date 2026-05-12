@@ -89,10 +89,18 @@ button:disabled::before {
   background-clip: text;
 }
 
+.is-home {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
 .is-home .footer {
-  background: transparent;
-  border-top-color: transparent;
+  background: none !important;
+  border-top: none;
   backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
 }
 
 .route-loading {
