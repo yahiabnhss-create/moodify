@@ -89,6 +89,12 @@ button:disabled::before {
   background-clip: text;
 }
 
+.is-home .footer {
+  background: transparent;
+  border-top-color: transparent;
+  backdrop-filter: none;
+}
+
 .route-loading {
   min-height: 260px;
   justify-content: center;

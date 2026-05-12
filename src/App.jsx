@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import './App.css'
 import Header from './components/Layout/Header'
 import PlayerBar from './components/Player/PlayerBar'
@@ -14,9 +14,11 @@ const Callback  = lazy(() => import('./pages/Callback'))
 /* Composant interne qui peut lire le context player */
 function AppShell() {
   const { playerState, togglePlay, nextTrack, prevTrack, seekTo, currentEmotion } = useSpotifyPlayer()
+  const { pathname } = useLocation()
+  const isHome = pathname === '/'
 
   return (
-    <>
+    <div className={isHome ? 'is-home' : undefined}>
       <Header />
       <Suspense fallback={<main className="route-loading">Chargement...</main>}>
         <Routes>
@@ -37,7 +39,7 @@ function AppShell() {
         currentEmotion={currentEmotion}
       />
       <footer className="footer"><span>made by Y9</span></footer>
-    </>
+    </div>
   )
 }
 
