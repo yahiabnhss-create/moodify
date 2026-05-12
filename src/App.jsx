@@ -36,7 +36,7 @@ function AppShell() {
         onSeek={seekTo}
         currentEmotion={currentEmotion}
       />
-      <footer className="footer">made by Y9</footer>
+      <footer className="footer"><span>made by Y9</span></footer>
     </>
   )
 }

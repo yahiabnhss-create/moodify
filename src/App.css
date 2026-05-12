@@ -71,13 +71,22 @@ button:disabled::before {
   padding: 16px 24px 20px;
   text-align: center;
   font-size: 12px;
-  font-weight: 500;
-  color: rgba(210, 210, 235, 0.28);
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   border-top: 1px solid var(--border);
   background: rgba(8, 8, 16, 0.6);
   backdrop-filter: blur(12px);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  position: relative;
+  z-index: 10;
+}
+
+.footer span {
+  background: linear-gradient(135deg, var(--accent) 30%, var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .route-loading {
