@@ -33,7 +33,10 @@ function Callback() {
 
     request
       .then(() => {
-        if (!cancelled) navigate('/result')
+        if (!cancelled) {
+          window.dispatchEvent(new CustomEvent('spotify:connected'))
+          navigate('/result')
+        }
       })
       .catch((err) => {
         if (!cancelled) {

@@ -6,7 +6,6 @@ import { loginWithSpotify, getToken, logout, getPlaylistTracks } from '../servic
 import { useSpotifyPlayer } from '../hooks/useSpotifyPlayer'
 import { useFavorites } from '../hooks/useFavorites'
 import { useHistory } from '../hooks/useHistory'
-import PlayerBar from '../components/Player/PlayerBar'
 import './Result.css'
 
 function SpotifyIcon({ size = 24 }) {
@@ -28,7 +27,7 @@ function Result() {
   const [apiError, setApiError] = useState(null)
   const [playError, setPlayError] = useState(null)
 
-  const { isReady, error: playerError, needsReauth, playerState, playPlaylist, togglePlay, nextTrack, prevTrack, seekTo } = useSpotifyPlayer()
+  const { isReady, error: playerError, needsReauth, playPlaylist, disconnectPlayer } = useSpotifyPlayer()
   const { addFavorite, removeFavorite, isFavorite } = useFavorites()
   const { addSession } = useHistory()
 
@@ -44,7 +43,7 @@ function Result() {
     async function playPending() {
       try {
         if (pendingPlayback.requestId !== detectRequestRef.current) return
-        await playPlaylist(pendingPlayback.playlistId)
+        await playPlaylist(pendingPlayback.playlistId, pendingPlayback.emotion)
         if (cancelled || pendingPlayback.requestId !== detectRequestRef.current) return
 
         addSession(
@@ -93,7 +92,7 @@ function Result() {
 
     if (isReady) {
       try {
-        await playPlaylist(emotionData.playlistId)
+        await playPlaylist(emotionData.playlistId, emotion)
         addSession(emotion, confidence, emotionData.playlistId, emotionData.label)
       } catch (err) {
         setPlayError(err.message)
@@ -128,6 +127,7 @@ function Result() {
   function handleLogout() {
     detectRequestRef.current += 1
     logout()
+    disconnectPlayer()
     setConnected(false)
     setDetectedEmotion(null)
     setDetectedConfidence(0)
@@ -273,14 +273,6 @@ function Result() {
         </section>
       )}
 
-      <PlayerBar
-        playerState={playerState}
-        onToggle={togglePlay}
-        onNext={nextTrack}
-        onPrev={prevTrack}
-        onSeek={seekTo}
-        currentEmotion={detectedEmotion}
-      />
     </main>
   )
 }
