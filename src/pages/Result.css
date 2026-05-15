@@ -6,11 +6,11 @@
   --mood-ink:  var(--accent);
 }
 
-.mood-page--happy    { --mood: #fbbf24; --mood-glow: rgba(251,191,36,0.28); --mood-ink: #fbbf24; }
-.mood-page--sad      { --mood: #60a5fa; --mood-glow: rgba(96,165,250,0.28); --mood-ink: #60a5fa; }
+.mood-page--happy    { --mood: #4ade80; --mood-glow: rgba(74,222,128,0.28);  --mood-ink: #4ade80; }
+.mood-page--sad      { --mood: #60a5fa; --mood-glow: rgba(96,165,250,0.28);  --mood-ink: #60a5fa; }
 .mood-page--angry    { --mood: #f87171; --mood-glow: rgba(248,113,113,0.28); --mood-ink: #f87171; }
-.mood-page--surprised{ --mood: #a78bfa; --mood-glow: rgba(167,139,250,0.28); --mood-ink: #a78bfa; }
-.mood-page--neutral  { --mood: #94a3b8; --mood-glow: rgba(148,163,184,0.2); --mood-ink: #94a3b8; }
+.mood-page--surprised{ --mood: #fbbf24; --mood-glow: rgba(251,191,36,0.28);  --mood-ink: #fbbf24; }
+.mood-page--neutral  { --mood: #818cf8; --mood-glow: rgba(129,140,248,0.28); --mood-ink: #818cf8; }
 
 /* ── Shell ── */
 .studio-shell {

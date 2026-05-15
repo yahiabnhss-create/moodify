@@ -194,7 +194,7 @@ function Dashboard() {
                           <EmotionTag emotionKey={session.emotion} />
                         </td>
                         <td>{Math.round(session.confidence * 100)}%</td>
-                        <td className="history-playlist">{session.playlistName}</td>
+                        <td className="history-playlist">{EMOTIONS[session.emotion]?.label ?? session.playlistName}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -4,7 +4,16 @@
   gap: 5px;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 11px;
+  font-size: inherit;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+/* Taille par défaut quand pas héritée (chips, filtres, tableau) */
+.favorites-filter-chip .emotion-tag,
+.filter-chip .emotion-tag,
+.favorite-meta .emotion-tag,
+.history-table td .emotion-tag,
+.top-favs-emotion .emotion-tag {
+  font-size: 11px;
 }
