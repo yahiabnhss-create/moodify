@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import EmotionDetector from '../components/EmotionDetector/EmotionDetector'
+import EmotionTag from '../components/EmotionTag'
 import Playlist from '../components/Playlist/Playlist'
 import { EMOTIONS } from '../constants/emotions'
 import { loginWithSpotify, getToken, logout, getPlaylistTracks } from '../services/spotify'
@@ -217,7 +218,7 @@ function Result() {
             ) : (
               <div className="emotion-card">
                 <div className="emotion-card-header">
-                  <span className="emotion-card-name">{currentEmotion.label}</span>
+                  <EmotionTag emotionKey={detectedEmotion} size={16} />
                   <span className="emotion-card-pct">{confidencePct}%</span>
                 </div>
 

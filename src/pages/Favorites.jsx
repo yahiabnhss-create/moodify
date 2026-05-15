@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useFavorites } from '../hooks/useFavorites'
 import { EMOTIONS } from '../constants/emotions'
 import PlaylistCard from '../components/Playlist/PlaylistCard'
+import EmotionTag from '../components/EmotionTag'
 import './Favorites.css'
 
 function formatDate(isoString) {
@@ -78,7 +79,7 @@ function Favorites() {
               className={`favorites-filter-chip ${filter === f ? 'favorites-filter-chip--active' : ''}`}
               onClick={() => setFilter(f)}
             >
-              {f === 'all' ? 'Toutes' : (EMOTIONS[f]?.label ?? f)}
+              {f === 'all' ? 'Toutes' : <EmotionTag emotionKey={f} />}
             </button>
           ))}
         </div>
@@ -88,7 +89,7 @@ function Favorites() {
         {sorted.map(track => (
           <div key={track.id} className="favorite-item">
             <div className="favorite-meta">
-              <span className="favorite-emotion">{EMOTIONS[track.emotionAtLike]?.label ?? track.emotionAtLike}</span>
+              <EmotionTag emotionKey={track.emotionAtLike} />
               <span className="favorite-date">{formatDate(track.dateLike)}</span>
             </div>
             <PlaylistCard

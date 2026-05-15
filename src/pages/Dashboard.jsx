@@ -3,20 +3,8 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import { useHistory } from '../hooks/useHistory'
 import { useFavorites } from '../hooks/useFavorites'
 import { EMOTIONS } from '../constants/emotions'
+import EmotionTag from '../components/EmotionTag'
 import './Dashboard.css'
-
-// 💡 Recharts fonctionne avec des composants déclaratifs :
-//   <PieChart> est le conteneur, <Pie> définit les données,
-//   <Cell> donne une couleur à chaque segment, <Tooltip> affiche les infos au survol
-
-// Couleurs associées à chaque émotion
-const EMOTION_COLORS = {
-  happy:     '#FFD700',
-  surprised: '#9B59B6',
-  sad:       '#4A90D9',
-  angry:     '#E74C3C',
-  neutral:   '#95A5A6',
-}
 
 // Formate une date ISO en format court : "05/05/2026 14:30"
 function formatDate(iso) {
@@ -111,7 +99,7 @@ function Dashboard() {
               </div>
               {dominant && (
                 <div className="stat-card stat-card--dominant">
-                  <span className="stat-value">{EMOTIONS[dominant.emotion]?.label ?? dominant.emotion}</span>
+                  <span className="stat-value"><EmotionTag emotionKey={dominant.emotion} size={18} /></span>
                   <span className="stat-label">Émotion dominante</span>
                 </div>
               )}
@@ -135,7 +123,7 @@ function Dashboard() {
                     {emotionStats.map(entry => (
                       <Cell
                         key={entry.emotion}
-                        fill={EMOTION_COLORS[entry.emotion] ?? '#ccc'}
+                        fill={EMOTIONS[entry.emotion]?.color ?? '#ccc'}
                       />
                     ))}
                   </Pie>
@@ -180,7 +168,7 @@ function Dashboard() {
                   className={`filter-chip ${emotionFilter === e ? 'filter-chip--active' : ''}`}
                   onClick={() => setEmotionFilter(e)}
                 >
-                  {e === 'all' ? 'Toutes' : (EMOTIONS[e]?.label ?? e)}
+                  {e === 'all' ? 'Toutes' : <EmotionTag emotionKey={e} />}
                 </button>
               ))}
             </div>
@@ -203,12 +191,7 @@ function Dashboard() {
                       <tr key={session.id}>
                         <td>{formatDate(session.date)}</td>
                         <td>
-                          <span
-                            className="history-emotion"
-                            style={{ color: EMOTION_COLORS[session.emotion] ?? 'inherit' }}
-                          >
-                            {EMOTIONS[session.emotion]?.label ?? session.emotion}
-                          </span>
+                          <EmotionTag emotionKey={session.emotion} />
                         </td>
                         <td>{Math.round(session.confidence * 100)}%</td>
                         <td className="history-playlist">{session.playlistName}</td>
@@ -228,7 +211,7 @@ function Dashboard() {
                 {Object.entries(favsByEmotion).map(([emotion, tracks]) => (
                   <div key={emotion} className="top-favs-group">
                     <h4 className="top-favs-emotion">
-                      {EMOTIONS[emotion]?.label ?? emotion}
+                      <EmotionTag emotionKey={emotion} size={14} />
                       <span className="top-favs-count">{tracks.length}</span>
                     </h4>
                     <ul className="top-favs-list">
