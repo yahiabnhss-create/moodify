@@ -118,7 +118,7 @@ export async function getPlaylistTracks(emotion) {
   }
 
   if (res.status === 403) {
-    throw new Error('Playlist inaccessible — essaie une autre émotion ou reconnecte-toi.')
+    return []
   }
 
   if (!res.ok) {

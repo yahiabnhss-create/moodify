@@ -22,6 +22,6 @@ export const EMOTIONS = {
   neutral: {
     label: 'Neutre 😐',
     genre: 'lofi / chill',
-    playlistId: '0vvXsWCC9xrXsKd4FyS8kM', // Lofi Girl
+    playlistId: '37i9dQZF1DX4WYpdgoIcn6', // Chill Hits (Spotify editorial)
   },
 }
