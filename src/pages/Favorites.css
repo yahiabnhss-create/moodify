@@ -1,6 +1,6 @@
 .favorites-page {
   width: min(920px, 100%);
-  align-self: center;
+  margin-inline: auto;
   align-items: stretch;
   gap: 20px;
 }
