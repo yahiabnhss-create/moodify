@@ -141,12 +141,17 @@ export function SpotifyPlayerProvider({ children }) {
 
     await new Promise(r => setTimeout(r, 800))
 
+    const randomOffset = Math.floor(Math.random() * 50)
+
     const playRes = await fetch(
       `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
       {
         method:  'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ context_uri: `spotify:playlist:${playlistId}` }),
+        body:    JSON.stringify({
+          context_uri: `spotify:playlist:${playlistId}`,
+          offset: { position: randomOffset },
+        }),
       }
     )
 
@@ -157,6 +162,12 @@ export function SpotifyPlayerProvider({ children }) {
     if (!playRes.ok && playRes.status !== 204) {
       throw new Error(await readSpotifyError(playRes, `Lecture Spotify impossible (${playRes.status})`))
     }
+
+    // Active le shuffle pour que les suivantes soient aussi aléatoires
+    await fetch(
+      `https://api.spotify.com/v1/me/player/shuffle?state=true&device_id=${deviceId}`,
+      { method: 'PUT', headers: { Authorization: `Bearer ${token}` } }
+    ).catch(() => {})
 
     if (emotion !== null) setCurrentEmotion(emotion)
   }, [])
