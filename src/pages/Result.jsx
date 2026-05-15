@@ -1,3 +1,19 @@
+// Page principale de Moodify.
+//
+// Flux d'utilisation :
+//   1. Si non connecté → affiche l'écran de connexion Spotify (OAuth PKCE)
+//   2. Si connecté → affiche la caméra + le bouton de détection
+//   3. Quand une émotion est validée (onDetect) :
+//      a. Lance la playlist correspondante sur le Spotify Player (si isReady)
+//         ou la met en attente (pendingPlayback) jusqu'à ce que le player soit prêt
+//      b. Charge les pistes de la playlist (getPlaylistTracks) pour les afficher dans l'UI
+//      c. Enregistre la session dans useHistory
+//   4. L'utilisateur peut ajouter/retirer des pistes en favoris depuis la liste
+//
+// Gestion de la concurrence :
+//   detectRequestRef.current = numéro de la dernière détection.
+//   Chaque handleDetect() l'incrémente pour annuler les requêtes API des détections précédentes.
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import EmotionDetector from '../components/EmotionDetector/EmotionDetector'
 import EmotionTag from '../components/EmotionTag'
@@ -9,6 +25,7 @@ import { useFavorites } from '../hooks/useFavorites'
 import { useHistory } from '../hooks/useHistory'
 import './Result.css'
 
+// Icône Spotify SVG inline (évite une dépendance externe pour un seul logo)
 function SpotifyIcon({ size = 24 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -18,24 +35,30 @@ function SpotifyIcon({ size = 24 }) {
 }
 
 function Result() {
+  // Incrémenté à chaque nouvelle détection pour invalider les requêtes en cours
   const detectRequestRef = useRef(0)
-  const [connected, setConnected] = useState(!!getToken())
-  const [detectedEmotion, setDetectedEmotion] = useState(null)
-  const [detectedConfidence, setDetectedConfidence] = useState(0)
-  const [pendingPlayback, setPendingPlayback] = useState(null)
-  const [tracks, setTracks] = useState([])
-  const [loadingTracks, setLoadingTracks] = useState(false)
-  const [apiError, setApiError] = useState(null)
-  const [playError, setPlayError] = useState(null)
+
+  const [connected, setConnected]               = useState(!!getToken()) // true si token valide en localStorage
+  const [detectedEmotion, setDetectedEmotion]   = useState(null)         // clé émotion ex: 'happy'
+  const [detectedConfidence, setDetectedConfidence] = useState(0)        // score 0–1
+  const [pendingPlayback, setPendingPlayback]   = useState(null)         // lecture en attente si player pas prêt
+  const [tracks, setTracks]                     = useState([])            // pistes affichées sous la caméra
+  const [loadingTracks, setLoadingTracks]       = useState(false)
+  const [apiError, setApiError]                 = useState(null)         // erreur API Spotify (pistes)
+  const [playError, setPlayError]               = useState(null)         // erreur de lecture du player
 
   const { isReady, error: playerError, needsReauth, playPlaylist, disconnectPlayer } = useSpotifyPlayer()
   const { addFavorite, removeFavorite, isFavorite } = useFavorites()
   const { addSession } = useHistory()
 
+  // Données de l'émotion courante (label, couleur, genre…) depuis constants/emotions.js
   const currentEmotion = detectedEmotion ? EMOTIONS[detectedEmotion] : null
-  const moodClass = `mood-page mood-page--${detectedEmotion ?? 'idle'}`
-  const confidencePct = Math.round(detectedConfidence * 100)
+  // Classe CSS qui change la couleur d'ambiance de la page selon l'émotion
+  const moodClass      = `mood-page mood-page--${detectedEmotion ?? 'idle'}`
+  const confidencePct  = Math.round(detectedConfidence * 100)
 
+  // Si le player n'était pas prêt au moment de la détection, on attend qu'il le soit
+  // puis on lance la lecture (pendingPlayback stocke les infos de la playlist à lancer)
   useEffect(() => {
     if (!isReady || !pendingPlayback) return
 
@@ -43,10 +66,14 @@ function Result() {
 
     async function playPending() {
       try {
+        // Vérifie que cette détection est toujours la plus récente
         if (pendingPlayback.requestId !== detectRequestRef.current) return
+
         await playPlaylist(pendingPlayback.playlistId, pendingPlayback.emotion)
+
         if (cancelled || pendingPlayback.requestId !== detectRequestRef.current) return
 
+        // Enregistre la session seulement quand la lecture démarre effectivement
         addSession(
           pendingPlayback.emotion,
           pendingPlayback.confidence,
@@ -62,14 +89,16 @@ function Result() {
     }
 
     void playPending()
-
     return () => { cancelled = true }
   }, [addSession, isReady, pendingPlayback, playPlaylist])
 
+  // Appelé par EmotionDetector quand une émotion est stabilisée.
+  // Lance la lecture ET charge les pistes en parallèle.
   const handleDetect = useCallback(async ({ emotion, confidence }) => {
     const requestId = detectRequestRef.current + 1
     detectRequestRef.current = requestId
 
+    // Réinitialise l'état précédent
     setDetectedEmotion(emotion)
     setDetectedConfidence(confidence)
     setPendingPlayback(null)
@@ -87,11 +116,12 @@ function Result() {
       requestId,
       emotion,
       confidence,
-      playlistId: emotionData.playlistId,
+      playlistId:   emotionData.playlistId,
       playlistName: emotionData.label,
     }
 
     if (isReady) {
+      // Player prêt → on lance immédiatement
       try {
         await playPlaylist(emotionData.playlistId, emotion)
         addSession(emotion, confidence, emotionData.playlistId, emotionData.label)
@@ -99,13 +129,15 @@ function Result() {
         setPlayError(err.message)
       }
     } else {
+      // Player pas encore prêt → on met la lecture en attente (sera déclenchée par le useEffect ci-dessus)
       setPendingPlayback(playback)
     }
 
+    // Charge les pistes de la playlist pour les afficher (indépendamment de la lecture)
     setLoadingTracks(true)
     try {
       const results = await getPlaylistTracks(emotionData)
-      if (detectRequestRef.current !== requestId) return
+      if (detectRequestRef.current !== requestId) return // une nouvelle détection a commencé entre temps
       setTracks(results)
     } catch (err) {
       if (detectRequestRef.current !== requestId) return
@@ -115,6 +147,7 @@ function Result() {
     }
   }, [addSession, isReady, playPlaylist])
 
+  // Lance le flux OAuth PKCE Spotify (redirige l'utilisateur vers accounts.spotify.com)
   const handleLogin = useCallback(async () => {
     setApiError(null)
     setPlayError(null)
@@ -125,6 +158,7 @@ function Result() {
     }
   }, [])
 
+  // Déconnecte Spotify : supprime le token, déconnecte le player, remet l'UI à zéro
   function handleLogout() {
     detectRequestRef.current += 1
     logout()
@@ -138,6 +172,7 @@ function Result() {
     setPlayError(null)
   }
 
+  // Relance la caméra sans se déconnecter (l'utilisateur veut changer d'humeur)
   function handleChangeMood() {
     detectRequestRef.current += 1
     setDetectedEmotion(null)
@@ -148,7 +183,7 @@ function Result() {
     setPlayError(null)
   }
 
-  /* ── Page connexion ── */
+  /* ── Écran de connexion (si pas de token Spotify) ── */
   if (!connected) {
     return (
       <main className="connect-page">
@@ -169,12 +204,12 @@ function Result() {
     )
   }
 
-  /* ── Page principale ── */
+  /* ── Page principale (connecté) ── */
   return (
     <main className={moodClass}>
       <section className="studio-shell">
 
-        {/* Topbar */}
+        {/* Barre supérieure : titre + statut player + bouton déconnexion */}
         <div className="studio-topbar">
           <div className="studio-title-block">
             <span className="studio-kicker">Moodify</span>
@@ -189,7 +224,7 @@ function Result() {
           </div>
         </div>
 
-        {/* Banners */}
+        {/* Bannière de ré-authentification (token expiré) */}
         {needsReauth && (
           <div className="reauth-banner">
             <p>Session Spotify expirée. Reconnecte-toi.</p>
@@ -198,6 +233,7 @@ function Result() {
             </button>
           </div>
         )}
+        {/* Avertissements non bloquants */}
         {playerError && !needsReauth && (
           <p className="result-notice">{playerError}</p>
         )}
@@ -206,22 +242,22 @@ function Result() {
         )}
         {apiError && <p className="result-error">{apiError}</p>}
 
-        {/* Grid caméra / info */}
+        {/* Grille 2 colonnes : info émotion à gauche, caméra à droite */}
         <div className="studio-grid">
 
-          {/* Colonne info */}
+          {/* Colonne gauche : affiche soit le hint initial, soit la carte émotion */}
           <section className="studio-copy">
             {!currentEmotion ? (
-              <>
-                <p className="studio-hint">Pointe ta caméra vers ton visage et lance le scan.</p>
-              </>
+              <p className="studio-hint">Pointe ta caméra vers ton visage et lance le scan.</p>
             ) : (
               <div className="emotion-card">
                 <div className="emotion-card-header">
+                  {/* EmotionTag = badge avec icône Lucide + label coloré */}
                   <EmotionTag emotionKey={detectedEmotion} size={16} />
                   <span className="emotion-card-pct">{confidencePct}%</span>
                 </div>
 
+                {/* Barre de progression représentant le score de confiance */}
                 <div className="emotion-card-bar-track">
                   <div
                     className="emotion-card-bar-fill"
@@ -243,25 +279,29 @@ function Result() {
             )}
           </section>
 
-          {/* Colonne caméra */}
+          {/* Colonne droite : composant caméra + détection */}
           <section className="camera-stage">
             <div className="stage-ruler">
               <span className="stage-live"><span className="live-dot" />LIVE</span>
               <span>mood scan</span>
             </div>
+            {/* EmotionDetector appelle handleDetect quand une émotion est stabilisée */}
             <EmotionDetector onDetect={handleDetect} />
           </section>
         </div>
       </section>
 
+      {/* Indicateur de chargement pendant la requête API Spotify */}
       {loadingTracks && <p className="result-loading">Chargement des titres...</p>}
 
+      {/* Liste des pistes de la playlist (s'affiche une fois chargée) */}
       {tracks.length > 0 && (
         <section className="result-content">
           <div className="playlist-heading">
             <span className="studio-kicker">Sélection</span>
             <h3 className="result-playlist-title">Titres recommandés</h3>
           </div>
+          {/* onFavorite bascule le favori (ajoute ou retire selon isFavorite) */}
           <Playlist
             tracks={tracks}
             onFavorite={track =>
@@ -273,7 +313,6 @@ function Result() {
           />
         </section>
       )}
-
     </main>
   )
 }

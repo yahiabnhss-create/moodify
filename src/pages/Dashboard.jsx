@@ -1,3 +1,14 @@
+// Page Dashboard — vue analytique de l'application.
+//
+// 3 sections :
+//   1. Stats : graphique camembert (Recharts) des émotions + émotion dominante
+//   2. Historique : tableau des sessions filtrables par période et par émotion
+//   3. Favoris par émotion : regroupement des pistes aimées selon l'humeur active au moment du like
+//
+// Les données viennent de deux hooks persistés en localStorage :
+//   - useHistory() → sessions de détection
+//   - useFavorites() → pistes mises en favori
+
 import { useMemo, useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { useHistory } from '../hooks/useHistory'
@@ -6,7 +17,7 @@ import { EMOTIONS } from '../constants/emotions'
 import EmotionTag from '../components/EmotionTag'
 import './Dashboard.css'
 
-// Formate une date ISO en format court : "05/05/2026 14:30"
+// Formate une date ISO en format français court : "05/05/2026 14:30"
 function formatDate(iso) {
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -14,6 +25,7 @@ function formatDate(iso) {
   }).format(new Date(iso))
 }
 
+// Options du filtre de période affiché au-dessus du dashboard
 const PERIODS = [
   { key: 'day',   label: "Aujourd'hui" },
   { key: 'week',  label: '7 derniers jours' },
@@ -21,35 +33,37 @@ const PERIODS = [
   { key: 'all',   label: 'Tout' },
 ]
 
+// Options du filtre par émotion dans la section historique ('all' + toutes les clés d'EMOTIONS)
 const EMOTION_FILTERS = ['all', ...Object.keys(EMOTIONS)]
 
 function Dashboard() {
   const { history, clearHistory, computeEmotionStats, filterByPeriod } = useHistory()
   const { favorites } = useFavorites()
 
-  const [period, setPeriod] = useState('all')
-  const [emotionFilter, setEmotionFilter] = useState('all')
-  const [confirmClear, setConfirmClear] = useState(false)
+  const [period, setPeriod]               = useState('all')   // filtre de période actif
+  const [emotionFilter, setEmotionFilter] = useState('all')   // filtre par émotion dans l'historique
+  const [confirmClear, setConfirmClear]   = useState(false)   // affiche le bouton de confirmation avant effacement
 
-  // Données filtrées par période pour les stats et l'historique
+  // Sessions filtrées par période (recalculé seulement quand period ou history change)
   const periodFiltered = useMemo(
     () => filterByPeriod(period),
     [filterByPeriod, period]
   )
 
-  // Stats émotions calculées depuis l'historique filtré
+  // Statistiques par émotion calculées sur les sessions filtrées
+  // Retourne [{ emotion, count, percent }, ...]
   const emotionStats = useMemo(
     () => computeEmotionStats(periodFiltered),
     [computeEmotionStats, periodFiltered]
   )
 
-  // Émotion dominante = celle avec le plus de sessions
+  // Émotion dominante = celle avec le plus grand nombre de sessions dans la période
   const dominant = useMemo(
     () => emotionStats.reduce((max, e) => e.count > (max?.count ?? 0) ? e : max, null),
     [emotionStats]
   )
 
-  // Historique filtré par émotion en plus de la période
+  // Double filtrage : période + émotion spécifique (pour le tableau historique)
   const historyFiltered = useMemo(
     () => emotionFilter === 'all'
       ? periodFiltered
@@ -57,12 +71,12 @@ function Dashboard() {
     [emotionFilter, periodFiltered]
   )
 
-  // Top favoris par émotion : on groupe les favoris par emotionAtLike
-  // 💡 CONCEPT : reduce() pour grouper un tableau en objet { emotion: [tracks] }
+  // Regroupe les favoris par émotion active au moment du like (emotionAtLike)
+  // Résultat : { happy: [track1, track2], sad: [track3], ... }
   const favsByEmotion = useMemo(() => {
     return favorites.reduce((acc, fav) => {
-      const key = fav.emotionAtLike ?? 'inconnu'
-      acc[key] = acc[key] ? [...acc[key], fav] : [fav]
+      const key  = fav.emotionAtLike ?? 'inconnu'
+      acc[key]   = acc[key] ? [...acc[key], fav] : [fav]
       return acc
     }, {})
   }, [favorites])
@@ -71,7 +85,7 @@ function Dashboard() {
     <main className="dashboard">
       <h2>Tableau de bord</h2>
 
-      {/* ── FILTRES DE PÉRIODE ── */}
+      {/* ── Filtre de période ── */}
       <div className="period-filters">
         {PERIODS.map(p => (
           <button
@@ -84,14 +98,16 @@ function Dashboard() {
         ))}
       </div>
 
+      {/* Si aucune session, on affiche un message plutôt qu'un dashboard vide */}
       {history.length === 0 ? (
         <p className="dashboard-empty">Aucune session enregistrée. Lance une détection !</p>
       ) : (
         <>
-          {/* ── SECTION STATS ── */}
+          {/* ── Section 1 : graphique camembert ── */}
           <section className="dashboard-section">
             <h3>Répartition des émotions</h3>
 
+            {/* Cartes résumé : nombre de sessions + émotion dominante */}
             <div className="stats-overview">
               <div className="stat-card">
                 <span className="stat-value">{periodFiltered.length}</span>
@@ -106,20 +122,22 @@ function Dashboard() {
             </div>
 
             {emotionStats.length > 0 ? (
-              // 💡 ResponsiveContainer adapte le graphique à la largeur du parent
+              // ResponsiveContainer = le camembert s'adapte à la largeur de son parent
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie
                     data={emotionStats}
-                    dataKey="count"
-                    nameKey="emotion"
+                    dataKey="count"    // valeur numérique utilisée pour calculer les parts
+                    nameKey="emotion"  // clé utilisée pour les labels et la légende
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
+                    // Label affiché sur chaque part : "Heureux 45%"
                     label={({ emotion, percent }) =>
                       `${EMOTIONS[emotion]?.label ?? emotion} ${percent}%`
                     }
                   >
+                    {/* Chaque Cell colore une part du camembert avec la couleur de l'émotion */}
                     {emotionStats.map(entry => (
                       <Cell
                         key={entry.emotion}
@@ -127,15 +145,15 @@ function Dashboard() {
                       />
                     ))}
                   </Pie>
+                  {/* Tooltip affiché au survol d'une part */}
                   <Tooltip
                     formatter={(value, name) => [
                       `${value} session${value > 1 ? 's' : ''}`,
                       EMOTIONS[name]?.label ?? name,
                     ]}
                   />
-                  <Legend
-                    formatter={name => EMOTIONS[name]?.label ?? name}
-                  />
+                  {/* Légende sous le graphique */}
+                  <Legend formatter={name => EMOTIONS[name]?.label ?? name} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -143,10 +161,11 @@ function Dashboard() {
             )}
           </section>
 
-          {/* ── SECTION HISTORIQUE ── */}
+          {/* ── Section 2 : tableau historique ── */}
           <section className="dashboard-section">
             <div className="section-header">
               <h3>Historique</h3>
+              {/* Confirmation en deux clics avant d'effacer tout l'historique */}
               {!confirmClear ? (
                 <button className="clear-btn" onClick={() => setConfirmClear(true)}>
                   Effacer
@@ -160,7 +179,7 @@ function Dashboard() {
               )}
             </div>
 
-            {/* Filtre par émotion */}
+            {/* Chips de filtre par émotion */}
             <div className="emotion-filters">
               {EMOTION_FILTERS.map(e => (
                 <button
@@ -190,10 +209,9 @@ function Dashboard() {
                     {historyFiltered.map(session => (
                       <tr key={session.id}>
                         <td>{formatDate(session.date)}</td>
-                        <td>
-                          <EmotionTag emotionKey={session.emotion} />
-                        </td>
+                        <td><EmotionTag emotionKey={session.emotion} /></td>
                         <td>{Math.round(session.confidence * 100)}%</td>
+                        {/* On affiche le label de l'émotion plutôt que le nom de la playlist */}
                         <td className="history-playlist">{EMOTIONS[session.emotion]?.label ?? session.playlistName}</td>
                       </tr>
                     ))}
@@ -203,7 +221,7 @@ function Dashboard() {
             )}
           </section>
 
-          {/* ── SECTION TOP FAVORIS PAR ÉMOTION ── */}
+          {/* ── Section 3 : favoris groupés par émotion ── */}
           {favorites.length > 0 && (
             <section className="dashboard-section">
               <h3>Favoris par émotion</h3>
@@ -214,6 +232,7 @@ function Dashboard() {
                       <EmotionTag emotionKey={emotion} size={14} />
                       <span className="top-favs-count">{tracks.length}</span>
                     </h4>
+                    {/* On affiche 5 pistes maximum par émotion */}
                     <ul className="top-favs-list">
                       {tracks.slice(0, 5).map(t => (
                         <li key={t.id} className="top-favs-item">
@@ -222,6 +241,7 @@ function Dashboard() {
                             <span className="top-favs-name">{t.name}</span>
                             <span className="top-favs-artist">{t.artist}</span>
                           </div>
+                          {/* Lien vers la piste sur Spotify */}
                           <a href={t.url} target="_blank" rel="noreferrer" className="top-favs-link">
                             ▶
                           </a>
